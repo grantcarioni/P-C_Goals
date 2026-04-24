@@ -366,7 +366,8 @@ function AdminPanel({pillars,appData,setAppData,onUpdatePillars}){
 
   const savePillar=(updated)=>{
     const next=[...pillars];next[editPillarIdx]={...next[editPillarIdx],...updated};
-    onUpdatePillars(next);setEditPillarIdx(null);showToast("Pillar updated successfully");
+    const nd={...appData,pillars:next};
+    setAppData(nd);save(nd);setEditPillarIdx(null);showToast("Pillar updated successfully");
   };
 
   const saveGoal=(pillarIdx,goalData)=>{
@@ -375,19 +376,19 @@ function AdminPanel({pillars,appData,setAppData,onUpdatePillars}){
     const existIdx=pi.goals.findIndex(g=>g.id===goalData.id);
     if(existIdx>=0){pi.goals[existIdx]={...pi.goals[existIdx],...goalData};}
     else{pi.goals.push(goalData);}
-    onUpdatePillars(next);setEditGoal(null);showToast(existIdx>=0?"Deliverable updated":"New deliverable added");
-    // Ensure storage entries exist
-    const nd={...appData};
+    // Single atomic update — pillars + storage entries in one state write
+    const nd={...appData,pillars:next};
     if(!nd.signups[goalData.id])nd.signups[goalData.id]=[];
     if(!nd.comments[goalData.id])nd.comments[goalData.id]=[];
-    if(nd.progress[goalData.id]===undefined)nd.progress[goalData.id]=goalData.progress||0;
-    setAppData(nd);save(nd);
+    nd.progress[goalData.id]=goalData.progress??nd.progress[goalData.id]??0;
+    setAppData(nd);save(nd);setEditGoal(null);showToast(existIdx>=0?"Deliverable updated":"New deliverable added");
   };
 
   const deleteGoal=(pillarIdx,goalId)=>{
     const next=JSON.parse(JSON.stringify(pillars));
     next[pillarIdx].goals=next[pillarIdx].goals.filter(g=>g.id!==goalId);
-    onUpdatePillars(next);setEditGoal(null);showToast("Deliverable deleted");
+    const nd={...appData,pillars:next};
+    setAppData(nd);save(nd);setEditGoal(null);showToast("Deliverable deleted");
   };
 
   return(
