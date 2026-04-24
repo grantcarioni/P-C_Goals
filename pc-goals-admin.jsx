@@ -225,9 +225,14 @@ function GoalEditor({goal,pillarId,pillars,onSave,onDelete,onCancel}){
   const[metric,setMetric]=useState(goal?.metric||"");
   const[q,setQ]=useState(goal?.q||"Q2");
   const[owner,setOwner]=useState(goal?.owner||"");
+  const[progress,setProgress]=useState(goal?.progress??0);
   const[confirmDelete,setConfirmDelete]=useState(false);
   const isNew=!goal;
   const canSave=text.trim()&&metric.trim()&&owner.trim();
+  const pillar=pillars?.find(p=>p.id===pillarId)||pillars?.[0];
+  const accentColor=pillar?.color||B.carmine;
+  const sc=progress>=75?B.success:progress>=40?B.gold:progress>=20?"#FF6A13":B.g3;
+  const sl=progress>=75?"On Track":progress>=40?"In Progress":progress>=20?"Early Stage":"Not Started";
   return(
     <div className="fade-in" style={{background:B.white,borderRadius:14,border:`2px solid ${B.carmine}33`,padding:"20px 22px",marginBottom:10,boxShadow:`0 4px 20px ${B.carmine}10`}}>
       <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:700,color:B.carmine,textTransform:"uppercase",letterSpacing:".06em",marginBottom:14,display:"flex",alignItems:"center",gap:6}}>
@@ -240,6 +245,21 @@ function GoalEditor({goal,pillarId,pillars,onSave,onDelete,onCancel}){
         <SelectInput label="Target Quarter" value={q} onChange={setQ} options={[{value:"Q1",label:"Q1"},{value:"Q2",label:"Q2"},{value:"Q3",label:"Q3"},{value:"Q4",label:"Q4"},{value:"Ongoing",label:"Ongoing"}]}/>
       </div>
       <TextInput label="Deliverable Owner" value={owner} onChange={setOwner} placeholder="Full name of the owner"/>
+      {/* Progress Control */}
+      <div style={{marginBottom:14}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <label style={{fontFamily:"'DM Sans',sans-serif",fontSize:10.5,fontWeight:600,color:B.g4,textTransform:"uppercase",letterSpacing:".06em"}}>Progress</label>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:9.5,fontWeight:600,padding:"2px 8px",borderRadius:4,background:sc+"18",color:sc,textTransform:"uppercase",letterSpacing:".04em"}}>{sl}</span>
+            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:accentColor,minWidth:36,textAlign:"right"}}>{progress}%</span>
+          </div>
+        </div>
+        <div style={{height:6,background:B.g2,borderRadius:3,overflow:"hidden",marginBottom:8}}>
+          <div style={{height:"100%",width:`${progress}%`,background:pillar?.gradient||accentColor,borderRadius:3,transition:"width .3s ease"}}/>
+        </div>
+        <input type="range" min="0" max="100" value={progress} onChange={e=>setProgress(Number(e.target.value))}
+          style={{width:"100%",accentColor,cursor:"pointer"}}/>
+      </div>
       <div style={{display:"flex",gap:8,justifyContent:"space-between",marginTop:4}}>
         <div>
           {!isNew&&!confirmDelete&&<Btn onClick={()=>setConfirmDelete(true)} variant="ghost" size="sm">Delete</Btn>}
@@ -253,7 +273,7 @@ function GoalEditor({goal,pillarId,pillars,onSave,onDelete,onCancel}){
         </div>
         <div style={{display:"flex",gap:8}}>
           <Btn onClick={onCancel} variant="secondary">Cancel</Btn>
-          <Btn onClick={()=>onSave({id:goal?.id||`g_${Date.now()}`,text:text.trim(),metric:metric.trim(),q,owner:owner.trim(),progress:goal?.progress||0})} disabled={!canSave}>
+          <Btn onClick={()=>onSave({id:goal?.id||`g_${Date.now()}`,text:text.trim(),metric:metric.trim(),q,owner:owner.trim(),progress})} disabled={!canSave}>
             {isNew?"Add Deliverable":"Save Changes"}
           </Btn>
         </div>
