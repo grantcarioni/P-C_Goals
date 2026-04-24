@@ -465,6 +465,7 @@ export default function App(){
   const[showWelcome,setShowWelcome]=useState(false);
   const[showLogin,setShowLogin]=useState(false);
   const[nameInput,setNameInput]=useState("");
+  const[staffPreview,setStaffPreview]=useState(false); // admin toggling to staff view
 
   useEffect(()=>{
     load().then(d=>{
@@ -486,11 +487,17 @@ export default function App(){
   },[]);
 
   const setName=()=>{if(!nameInput.trim())return;const next={...data,userName:nameInput.trim()};setData(next);save(next);setShowWelcome(false);};
-  const handleAdminLogin=()=>{const next={...data,isAdmin:true};setData(next);save(next);setView("admin");};
-  const handleLogout=()=>{const next={...data,isAdmin:false};setData(next);save(next);setView("pillars");};
+  const handleAdminLogin=()=>{const next={...data,isAdmin:true};setData(next);save(next);setStaffPreview(false);setView("admin");};
+  const handleSignOut=()=>{const next={...data,isAdmin:false};setData(next);save(next);setStaffPreview(false);setView("pillars");};
+  const handleTogglePreview=()=>{
+    const entering=!staffPreview;
+    setStaffPreview(entering);
+    if(entering&&view==="admin")setView("pillars");
+  };
   const updatePillars=(newP)=>{const next={...data,pillars:newP};setData(next);save(next);};
 
   const pillars=data?.pillars||DEFAULT_PILLARS;
+  const isAdminActive=data?.isAdmin&&!staffPreview;
   const pillar=pillars[active]||pillars[0];
   const avgProg=(p)=>{if(!p.goals.length)return 0;const ps=p.goals.map(g=>data?.progress[g.id]??g.progress);return ps.reduce((a,b)=>a+b,0)/ps.length;};
   const totalGoals=pillars.reduce((a,p)=>a+p.goals.length,0);
@@ -539,10 +546,11 @@ export default function App(){
               <div><div style={{fontSize:10,fontWeight:700,color:B.carmine,textTransform:"uppercase",letterSpacing:".12em"}}>Nutrition International</div><div style={{fontSize:9,color:"rgba(255,255,255,.4)",fontStyle:"italic"}}>Nourish Life</div></div>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:12}}>
-              {data.isAdmin&&<span style={{fontSize:10,fontWeight:700,color:B.gold,background:`${B.gold}18`,padding:"3px 10px",borderRadius:6,textTransform:"uppercase",letterSpacing:".06em"}}>Admin</span>}
+              {isAdminActive&&<span style={{fontSize:10,fontWeight:700,color:B.gold,background:`${B.gold}18`,padding:"3px 10px",borderRadius:6,textTransform:"uppercase",letterSpacing:".06em"}}>Admin</span>}
+              {staffPreview&&<span style={{fontSize:10,fontWeight:700,color:"#fff",background:"rgba(255,255,255,.12)",padding:"3px 10px",borderRadius:6,textTransform:"uppercase",letterSpacing:".06em",border:"1px solid rgba(255,255,255,.2)"}}>Staff Preview</span>}
               {data.userName&&(
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <Initials name={data.userName} size={28} bg={data.isAdmin?B.gold:B.carmine}/>
+                  <Initials name={data.userName} size={28} bg={isAdminActive?B.gold:B.carmine}/>
                   <div><div style={{fontSize:11.5,fontWeight:600,color:"rgba(255,255,255,.85)"}}>{data.userName}</div><button onClick={()=>setShowWelcome(true)} style={{fontSize:9.5,color:B.g3,background:"none",border:"none",cursor:"pointer",padding:0,textDecoration:"underline"}}>Switch</button></div>
                 </div>
               )}
@@ -574,11 +582,20 @@ export default function App(){
           <div style={{flex:1}}/>
           {data.isAdmin?(
             <div style={{display:"flex",gap:6,alignItems:"center"}}>
-              <button onClick={()=>setView("admin")} style={{padding:"7px 14px",border:"none",borderBottom:view==="admin"?`3px solid ${B.gold}`:"3px solid transparent",background:"transparent",fontSize:12,fontWeight:view==="admin"?700:500,color:view==="admin"?B.goldDark:B.g4,cursor:"pointer",marginBottom:-2,display:"flex",alignItems:"center",gap:5}}>
-                <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12.9 4.1a2.1 2.1 0 013 3L8 15l-4 1 1-4z"/></svg>
-                Admin
+              {isAdminActive&&(
+                <button onClick={()=>setView("admin")} style={{padding:"7px 14px",border:"none",borderBottom:view==="admin"?`3px solid ${B.gold}`:"3px solid transparent",background:"transparent",fontSize:12,fontWeight:view==="admin"?700:500,color:view==="admin"?B.goldDark:B.g4,cursor:"pointer",marginBottom:-2,display:"flex",alignItems:"center",gap:5}}>
+                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12.9 4.1a2.1 2.1 0 013 3L8 15l-4 1 1-4z"/></svg>
+                  Admin
+                </button>
+              )}
+              <button onClick={handleTogglePreview} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 12px",border:`1px solid ${staffPreview?B.carmine:B.g2}`,borderRadius:7,background:staffPreview?`${B.carmine}12`:"transparent",fontSize:11,fontWeight:600,color:staffPreview?B.carmine:B.g4,cursor:"pointer",transition:"all .2s"}}>
+                {staffPreview?(
+                  <><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12.9 4.1a2.1 2.1 0 013 3L8 15l-4 1 1-4z"/></svg>Admin Mode</>
+                ):(
+                  <><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M1 12s3-7 9-7 9 7 9 7-3 7-9 7-9-7-9-7z"/><circle cx="10" cy="12" r="3"/></svg>Staff View</>
+                )}
               </button>
-              <button onClick={handleLogout} style={{padding:"7px 12px",border:"none",background:"transparent",fontSize:11,color:B.g3,cursor:"pointer",marginBottom:-2,textDecoration:"underline"}}>Logout</button>
+              <button onClick={handleSignOut} style={{padding:"7px 12px",border:"none",background:"transparent",fontSize:11,color:B.g3,cursor:"pointer",marginBottom:0,textDecoration:"underline"}}>Sign Out</button>
             </div>
           ):(
             <button onClick={()=>setShowLogin(true)} style={{padding:"7px 14px",border:"none",background:"transparent",fontSize:11,color:B.g3,cursor:"pointer",marginBottom:-2,display:"flex",alignItems:"center",gap:5}}>
@@ -591,7 +608,7 @@ export default function App(){
 
       {/* CONTENT */}
       <div style={{maxWidth:920,margin:"0 auto",padding:"0 24px 48px"}}>
-        {view==="admin"?(
+        {view==="admin"&&isAdminActive?(
           <AdminPanel pillars={pillars} appData={data} setAppData={setData} onUpdatePillars={updatePillars}/>
         ):view==="alignment"?(
           <div className="fade-up" style={{background:B.white,borderRadius:14,overflow:"hidden",border:`1px solid ${B.g2}`}}>
@@ -642,7 +659,7 @@ export default function App(){
             {/* Deliverables */}
             <div style={{marginBottom:18}}>
               <div style={{fontSize:11,fontWeight:700,color:B.charcoal,textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>Key Deliverables<span style={{fontWeight:500,color:B.g3,textTransform:"none"}}> · {pillar.goals.length} outcomes</span></div>
-              {pillar.goals.map((g,i)=><DeliverableCard key={g.id} goal={g} pillar={pillar} appData={data} setAppData={setData} userName={data.userName} index={i} isAdmin={data.isAdmin}/>)}
+              {pillar.goals.map((g,i)=><DeliverableCard key={g.id} goal={g} pillar={pillar} appData={data} setAppData={setData} userName={data.userName} index={i} isAdmin={isAdminActive}/>)}
             </div>
 
             {/* Tips */}
