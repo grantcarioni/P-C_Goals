@@ -332,9 +332,17 @@ function DeliverableCard({goal,pillar,appData,setAppData,userName,index,isAdmin}
             </div>
           </div>
           <div style={{padding:"0 18px 14px"}}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{fontSize:10,fontWeight:600,color:B.g4,textTransform:"uppercase",letterSpacing:".05em"}}>Progress</span><span style={{fontSize:12,fontWeight:700,color:pillar.color}}>{prog}%</span></div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+              <span style={{fontSize:10,fontWeight:600,color:B.g4,textTransform:"uppercase",letterSpacing:".05em"}}>Progress</span>
+              <div style={{display:"flex",alignItems:"center",gap:6}}>
+                {!isMember&&!isAdmin&&userName&&<span style={{fontSize:9.5,color:B.g3,fontStyle:"italic"}}>Join group to update</span>}
+                <span style={{fontSize:12,fontWeight:700,color:pillar.color}}>{prog}%</span>
+              </div>
+            </div>
             <div style={{height:7,background:B.g2,borderRadius:4,overflow:"hidden",marginBottom:6}}><div style={{height:"100%",width:`${prog}%`,background:pillar.gradient,borderRadius:4,transition:"width .5s cubic-bezier(.4,0,.2,1)"}}/></div>
-            <input type="range" min="0" max="100" value={prog} onChange={e=>setProgress(Number(e.target.value))} style={{width:"100%",accentColor:pillar.color,cursor:"pointer"}}/>
+            {(isMember||isAdmin)
+              ?<input type="range" min="0" max="100" value={prog} onChange={e=>setProgress(Number(e.target.value))} style={{width:"100%",accentColor:pillar.color,cursor:"pointer"}}/>
+              :<div style={{height:18}}/>}
           </div>
           <div style={{padding:"14px 18px",background:B.cream,borderTop:`1px solid ${B.g2}`}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
