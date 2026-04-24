@@ -99,8 +99,8 @@ const CROSS_CUTTING = [
 
 // ── STORAGE ──
 const SK="ni-pc-v4";
-async function load(){try{const r=await window.storage.get(SK);return r?JSON.parse(r.value):null;}catch{return null;}}
-async function save(d){try{await window.storage.set(SK,JSON.stringify(d));}catch(e){console.error(e);}}
+async function load(){try{const r=localStorage.getItem(SK);return r?JSON.parse(r):null;}catch{return null;}}
+async function save(d){try{localStorage.setItem(SK,JSON.stringify(d));}catch(e){console.error(e);}}
 function makeDefaults(pillars){
   const s={},c={},p={};
   pillars.forEach(pl=>pl.goals.forEach(g=>{s[g.id]=s[g.id]||[];c[g.id]=c[g.id]||[];p[g.id]=p[g.id]??g.progress;}));
