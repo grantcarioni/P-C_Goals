@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { ref, set, onValue } from "firebase/database";
+import { db, DB_PATH } from "./src/firebaseConfig.js";
 
 /* ═══════════════════════════════════════════════════════════════
    NUTRITION INTERNATIONAL — People & Culture Goals Dashboard
@@ -98,13 +100,31 @@ const CROSS_CUTTING = [
 ];
 
 // ── STORAGE ──
-const SK="ni-pc-v4";
-async function load(){try{const r=localStorage.getItem(SK);return r?JSON.parse(r):null;}catch{return null;}}
-async function save(d){try{localStorage.setItem(SK,JSON.stringify(d));}catch(e){console.error(e);}}
+// Personal (per-browser) keys — not shared
+const LS_NAME="ni-pc-name";
+const LS_ADMIN="ni-pc-isAdmin";
+
+// Shared state lives in Firebase. Strip personal fields before writing.
+function toShared(d){
+  const {userName,isAdmin,...shared}=d;
+  return shared;
+}
+
+// Write shared state to Firebase (debounced by React batching)
+async function save(d){
+  try{
+    const shared=toShared(d);
+    await set(ref(db,DB_PATH),shared);
+    // Persist personal fields locally only
+    if(d.userName!==undefined)localStorage.setItem(LS_NAME,d.userName);
+    if(d.isAdmin!==undefined)localStorage.setItem(LS_ADMIN,d.isAdmin?"1":"");
+  }catch(e){console.error("Firebase write error:",e);}
+}
+
 function makeDefaults(pillars){
   const s={},c={},p={};
   pillars.forEach(pl=>pl.goals.forEach(g=>{s[g.id]=s[g.id]||[];c[g.id]=c[g.id]||[];p[g.id]=p[g.id]??g.progress;}));
-  return {signups:s,comments:c,progress:p,userName:"",pillars,isAdmin:false};
+  return {signups:s,comments:c,progress:p,pillars};
 }
 
 const FONTS=`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');`;
@@ -487,28 +507,63 @@ export default function App(){
   const[nameInput,setNameInput]=useState("");
   const[staffPreview,setStaffPreview]=useState(false); // admin toggling to staff view
 
+  // ── Real-time Firebase listener ──
+  // Fires once on mount (initial load) and again whenever ANY client writes to
+  // the database — so all browsers stay in sync automatically.
   useEffect(()=>{
-    load().then(d=>{
-      if(d&&d.pillars){
-        const merged={...makeDefaults(d.pillars),...d};
+    const dbRef=ref(db,DB_PATH);
+    // Read personal fields from localStorage (they're not in Firebase)
+    const storedName=localStorage.getItem(LS_NAME)||""; 
+    const storedAdmin=localStorage.getItem(LS_ADMIN)==="1";
+
+    const unsub=onValue(dbRef,(snapshot)=>{
+      const remote=snapshot.val();
+      let shared;
+      if(remote&&remote.pillars){
+        shared={...makeDefaults(remote.pillars),...remote};
         // ensure all goals have storage entries
-        merged.pillars.forEach(p=>p.goals.forEach(g=>{
-          if(!merged.signups[g.id])merged.signups[g.id]=[];
-          if(!merged.comments[g.id])merged.comments[g.id]=[];
-          if(merged.progress[g.id]===undefined)merged.progress[g.id]=g.progress;
+        shared.pillars.forEach(p=>p.goals.forEach(g=>{
+          if(!shared.signups[g.id])shared.signups[g.id]=[];
+          if(!shared.comments[g.id])shared.comments[g.id]=[];
+          if(shared.progress[g.id]===undefined)shared.progress[g.id]=g.progress;
         }));
-        setData(merged);
       } else {
-        setData(makeDefaults(DEFAULT_PILLARS));
+        // First-ever load — seed from code defaults and push to Firebase
+        shared=makeDefaults(DEFAULT_PILLARS);
+        set(dbRef,shared).catch(console.error);
       }
+      // Merge personal fields back in
+      setData(d=>({...shared,userName:d?.userName||storedName,isAdmin:d?.isAdmin||storedAdmin}));
       setLoading(false);
-      if(!d?.userName)setShowWelcome(true);
+      // Show name prompt only if no stored name
+      if(!storedName)setShowWelcome(true);
+    },(err)=>{
+      console.error("Firebase read error:",err);
+      // Fallback: seed locally if Firebase is unreachable
+      setData({...makeDefaults(DEFAULT_PILLARS),userName:storedName,isAdmin:storedAdmin});
+      setLoading(false);
+      if(!storedName)setShowWelcome(true);
     });
+
+    return ()=>unsub(); // unsubscribe on unmount
   },[]);
 
-  const setName=()=>{if(!nameInput.trim())return;const next={...data,userName:nameInput.trim()};setData(next);save(next);setShowWelcome(false);};
-  const handleAdminLogin=()=>{const next={...data,isAdmin:true};setData(next);save(next);setStaffPreview(false);setView("admin");};
-  const handleSignOut=()=>{const next={...data,isAdmin:false};setData(next);save(next);setStaffPreview(false);setView("pillars");};
+  const setName=()=>{
+    if(!nameInput.trim())return;
+    localStorage.setItem(LS_NAME,nameInput.trim());
+    setData(d=>({...d,userName:nameInput.trim()}));
+    setShowWelcome(false);
+  };
+  const handleAdminLogin=()=>{
+    localStorage.setItem(LS_ADMIN,"1");
+    setData(d=>({...d,isAdmin:true}));
+    setStaffPreview(false);setView("admin");
+  };
+  const handleSignOut=()=>{
+    localStorage.setItem(LS_ADMIN,"");
+    setData(d=>({...d,isAdmin:false}));
+    setStaffPreview(false);setView("pillars");
+  };
   const handleTogglePreview=()=>{
     const entering=!staffPreview;
     setStaffPreview(entering);
