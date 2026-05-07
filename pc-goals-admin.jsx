@@ -327,6 +327,25 @@ function PillarEditor({pillar,onSave,onCancel}){
   );
 }
 
+// ── TIME HELPERS ──
+function timeLeft(q){
+  const now=new Date();
+  const yr=now.getFullYear();
+  const qDates={Q1:new Date(yr,2,31,23,59,59),Q2:new Date(yr,5,30,23,59,59),Q3:new Date(yr,8,30,23,59,59),Q4:new Date(yr,11,31,23,59,59),Ongoing:new Date(yr,11,31,23,59,59)};
+  const due=qDates[q]||qDates["Ongoing"];
+  const ms=due-now;
+  if(ms<0)return{label:"Overdue",short:"Overdue",color:B.danger,bg:B.dangerLight};
+  const days=Math.ceil(ms/864e5);
+  if(days<=14)return{label:`${days} day${days!==1?"s":""} left`,short:`${days}d left`,color:B.danger,bg:B.dangerLight};
+  if(days<=60){const wk=Math.ceil(days/7);return{label:`${wk} week${wk!==1?"s":""} left`,short:`${wk}wk left`,color:B.goldDark,bg:"#FFF6DC"};}
+  const mo=Math.floor(days/30.4);
+  return{label:`${mo} month${mo!==1?"s":""} left`,short:`${mo}mo left`,color:B.success,bg:B.successLight};
+}
+function yearProgress(){
+  const now=new Date();const yr=now.getFullYear();
+  return Math.round(((now-new Date(yr,0,1))/(new Date(yr,11,31,23,59,59)-new Date(yr,0,1)))*100);
+}
+
 // ── DELIVERABLE CARD (Staff view) ──
 function DeliverableCard({goal,pillar,appData,setAppData,userName,index,isAdmin}){
   const[expanded,setExpanded]=useState(false);
@@ -351,6 +370,7 @@ function DeliverableCard({goal,pillar,appData,setAppData,userName,index,isAdmin}
           <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
             <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:9.5,fontWeight:600,padding:"2px 7px",borderRadius:4,background:sc+"18",color:sc,textTransform:"uppercase",letterSpacing:".04em"}}>{sl}</span>
             <span style={{fontSize:10,color:B.g3}}>{goal.q}</span>
+            {(()=>{const tl=timeLeft(goal.q);return <span style={{fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:4,background:tl.bg,color:tl.color,letterSpacing:".03em"}}>{tl.short}</span>;})()}
             <span style={{fontSize:10,color:B.g3}}>·</span>
             <span style={{fontSize:10,fontWeight:500,color:B.g4}}>{goal.owner}</span>
             {signups.length>0&&<><span style={{fontSize:10,color:B.g3}}>·</span><span style={{fontSize:10,fontWeight:600,color:pillar.color}}>{signups.length} in group</span></>}
@@ -368,7 +388,19 @@ function DeliverableCard({goal,pillar,appData,setAppData,userName,index,isAdmin}
             </div>
             <div style={{display:"flex",gap:8}}>
               <div style={{padding:"8px 12px",background:B.g1,borderRadius:10}}><div style={{fontSize:9,fontWeight:600,color:B.g3,textTransform:"uppercase",letterSpacing:".06em"}}>Target</div><div style={{fontFamily:"'DM Serif Display',serif",fontSize:14,color:B.charcoal,marginTop:1}}>{goal.metric}</div></div>
-              <div style={{padding:"8px 12px",background:B.g1,borderRadius:10}}><div style={{fontSize:9,fontWeight:600,color:B.g3,textTransform:"uppercase",letterSpacing:".06em"}}>Due</div><div style={{fontFamily:"'DM Serif Display',serif",fontSize:14,color:B.charcoal,marginTop:1}}>{goal.q}</div></div>
+              {(()=>{const tl=timeLeft(goal.q);const yp=yearProgress();return(
+                <div style={{padding:"8px 12px",background:B.g1,borderRadius:10,minWidth:130}}>
+                  <div style={{fontSize:9,fontWeight:600,color:B.g3,textTransform:"uppercase",letterSpacing:".06em",marginBottom:3}}>Due · Time Left</div>
+                  <div style={{display:"flex",alignItems:"baseline",gap:7,marginBottom:6}}>
+                    <div style={{fontFamily:"'DM Serif Display',serif",fontSize:14,color:B.charcoal}}>{goal.q}</div>
+                    <span style={{fontSize:10.5,fontWeight:700,color:tl.color}}>{tl.label}</span>
+                  </div>
+                  <div style={{height:4,background:B.g2,borderRadius:2,overflow:"hidden",marginBottom:3}}>
+                    <div style={{height:"100%",width:`${yp}%`,background:`linear-gradient(90deg,${tl.color}99,${tl.color})`,borderRadius:2,transition:"width .5s"}}/>
+                  </div>
+                  <div style={{fontSize:8.5,color:B.g3}}>{yp}% of {new Date().getFullYear()} elapsed</div>
+                </div>
+              );})()}
             </div>
           </div>
           <div style={{padding:"0 18px 14px"}}>
