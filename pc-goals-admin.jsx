@@ -351,6 +351,7 @@ function DeliverableCard({goal,pillar,appData,setAppData,userName,index,isAdmin}
   const[expanded,setExpanded]=useState(false);
   const[commentText,setCommentText]=useState("");
   const[justJoined,setJustJoined]=useState(false);
+  const[addName,setAddName]=useState("");
   const signups=appData.signups[goal.id]||[];
   const comments=appData.comments[goal.id]||[];
   const prog=appData.progress[goal.id]??goal.progress;
@@ -359,6 +360,8 @@ function DeliverableCard({goal,pillar,appData,setAppData,userName,index,isAdmin}
   const toggleSignup=()=>{if(!userName)return;update(n=>{if(isMember){n.signups[goal.id]=signups.filter(x=>x!==userName);}else{n.signups[goal.id]=[...signups,userName];setJustJoined(true);setTimeout(()=>setJustJoined(false),3000);}});};
   const postComment=()=>{if(!commentText.trim()||!userName)return;update(n=>{n.comments[goal.id]=[...comments,{a:userName,t:commentText.trim(),d:new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short"})}];});setCommentText("");};
   const setProgress=(v)=>update(n=>{n.progress[goal.id]=v;});
+  const removeMember=(name)=>update(n=>{n.signups[goal.id]=signups.filter(x=>x!==name);});
+  const addMember=()=>{const name=addName.trim();if(!name||signups.includes(name))return;update(n=>{n.signups[goal.id]=[...signups,name];});setAddName("");};
   const sc=prog>=75?B.success:prog>=40?B.gold:prog>=20?"#FF6A13":B.g3;
   const sl=prog>=75?"On Track":prog>=40?"In Progress":prog>=20?"Early Stage":"Not Started";
   return(
@@ -422,8 +425,9 @@ function DeliverableCard({goal,pillar,appData,setAppData,userName,index,isAdmin}
               {userName&&<Btn onClick={e=>{e.stopPropagation();toggleSignup();}} variant={isMember?"secondary":{color:pillar.color}} size="sm">{isMember?"Leave":"Join Group"}</Btn>}
             </div>
             {justJoined&&<div className="fade-up" style={{fontSize:12,color:B.success,background:B.successLight,borderRadius:8,padding:"7px 12px",marginBottom:8,border:`1px solid ${B.success}33`,fontWeight:500}}>Welcome to the working group!</div>}
-            {signups.length>0?<div style={{display:"flex",flexWrap:"wrap",gap:5}}>{signups.map((n,i)=><span key={i} style={{display:"inline-flex",alignItems:"center",gap:5,padding:"3px 10px 3px 3px",background:B.white,borderRadius:20,border:`1px solid ${B.g2}`,fontSize:11,fontWeight:500,color:B.charcoal}}><Initials name={n} size={20} bg={pillar.color+"22"} color={pillar.color}/>{n}</span>)}</div>
-            :<div style={{fontSize:12,color:B.g3,fontStyle:"italic"}}>No members yet — be the first to join.</div>}
+            {signups.length>0?<div style={{display:"flex",flexWrap:"wrap",gap:5}}>{signups.map((n,i)=><span key={i} style={{display:"inline-flex",alignItems:"center",gap:5,padding:"3px 6px 3px 3px",background:B.white,borderRadius:20,border:`1px solid ${B.g2}`,fontSize:11,fontWeight:500,color:B.charcoal}}><Initials name={n} size={20} bg={pillar.color+"22"} color={pillar.color}/>{n}{isAdmin&&<button onClick={e=>{e.stopPropagation();removeMember(n);}} title={`Remove ${n}`} style={{marginLeft:2,background:"none",border:"none",cursor:"pointer",color:B.g3,fontSize:14,lineHeight:1,padding:"0 2px",borderRadius:"50%",display:"flex",alignItems:"center"}} onMouseOver={e=>e.currentTarget.style.color=B.danger} onMouseOut={e=>e.currentTarget.style.color=B.g3}>×</button>}</span>)}</div>
+            :<div style={{fontSize:12,color:B.g3,fontStyle:"italic"}}>{isAdmin?"No members yet — add one below.":"No members yet — be the first to join."}</div>}
+            {isAdmin&&<div style={{display:"flex",gap:5,marginTop:8,background:B.white,borderRadius:10,padding:"3px 3px 3px 12px",border:`1px solid ${B.g2}`}}><input type="text" placeholder="Add member by name…" value={addName} onChange={e=>setAddName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addMember()} style={{flex:1,fontFamily:"'DM Sans',sans-serif",fontSize:12,border:"none",outline:"none",background:"transparent",color:B.charcoal,padding:"5px 0"}}/><Btn onClick={addMember} disabled={!addName.trim()||signups.includes(addName.trim())} variant={{color:pillar.color}} size="sm">Add</Btn></div>}
           </div>
           <div style={{padding:"14px 18px",borderTop:`1px solid ${B.g2}`}}>
             <div style={{fontSize:10.5,fontWeight:700,color:B.charcoal,textTransform:"uppercase",letterSpacing:".05em",marginBottom:8}}>Progress Updates{comments.length>0&&<span style={{fontWeight:500,color:B.g3,textTransform:"none",marginLeft:6}}>{comments.length}</span>}</div>
