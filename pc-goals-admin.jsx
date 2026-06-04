@@ -362,6 +362,8 @@ function DeliverableCard({goal,pillar,appData,setAppData,userName,index,isAdmin}
   const setProgress=(v)=>update(n=>{n.progress[goal.id]=v;});
   const removeMember=(name)=>update(n=>{n.signups[goal.id]=signups.filter(x=>x!==name);});
   const addMember=()=>{const name=addName.trim();if(!name||signups.includes(name))return;update(n=>{n.signups[goal.id]=[...signups,name];});setAddName("");};
+  const isOwner=userName===goal.owner;
+  const updateDue=(newQ)=>update(n=>{n.pillars=n.pillars.map(p=>p.id!==pillar.id?p:{...p,goals:p.goals.map(g=>g.id!==goal.id?g:{...g,q:newQ})});});
   const sc=prog>=75?B.success:prog>=40?B.gold:prog>=20?"#FF6A13":B.g3;
   const sl=prog>=75?"On Track":prog>=40?"In Progress":prog>=20?"Early Stage":"Not Started";
   return(
@@ -395,7 +397,12 @@ function DeliverableCard({goal,pillar,appData,setAppData,userName,index,isAdmin}
                 <div style={{padding:"8px 12px",background:B.g1,borderRadius:10,minWidth:130}}>
                   <div style={{fontSize:9,fontWeight:600,color:B.g3,textTransform:"uppercase",letterSpacing:".06em",marginBottom:3}}>Due · Time Left</div>
                   <div style={{display:"flex",alignItems:"baseline",gap:7,marginBottom:6}}>
-                    <div style={{fontFamily:"'DM Serif Display',serif",fontSize:14,color:B.charcoal}}>{goal.q}</div>
+                    {(isOwner||isAdmin)
+                      ?<select value={goal.q} onChange={e=>{e.stopPropagation();updateDue(e.target.value);}} onClick={e=>e.stopPropagation()} style={{fontFamily:"'DM Serif Display',serif",fontSize:14,color:B.charcoal,border:`1.5px solid ${pillar.color}55`,borderRadius:6,padding:"2px 6px",background:B.white,cursor:"pointer",outline:"none"}}>
+                          {["Q1","Q2","Q3","Q4","Ongoing"].map(q=><option key={q} value={q}>{q}</option>)}
+                        </select>
+                      :<div style={{fontFamily:"'DM Serif Display',serif",fontSize:14,color:B.charcoal}}>{goal.q}</div>
+                    }
                     <span style={{fontSize:10.5,fontWeight:700,color:tl.color}}>{tl.label}</span>
                   </div>
                   <div style={{height:4,background:B.g2,borderRadius:2,overflow:"hidden",marginBottom:3}}>
