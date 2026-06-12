@@ -124,7 +124,7 @@ async function save(d){
 function makeDefaults(pillars){
   const s={},c={},p={};
   pillars.forEach(pl=>pl.goals.forEach(g=>{s[g.id]=s[g.id]||[];c[g.id]=c[g.id]||[];p[g.id]=p[g.id]??g.progress;}));
-  return {signups:s,comments:c,progress:p,pillars};
+  return {signups:s,comments:c,progress:p,pillars,admins:[]};
 }
 
 const FONTS=`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');`;
@@ -448,10 +448,15 @@ function DeliverableCard({goal,pillar,appData,setAppData,userName,index,isAdmin}
 }
 
 // ── ADMIN PANEL ──
-function AdminPanel({pillars,appData,setAppData,onUpdatePillars}){
+function AdminPanel({pillars,appData,setAppData,onUpdatePillars,isRootAdmin}){
   const[editPillarIdx,setEditPillarIdx]=useState(null);
   const[editGoal,setEditGoal]=useState(null); // {pillarIdx, goalId} or {pillarIdx, new:true}
   const[toast,setToast]=useState(null);
+  const[newAdminName,setNewAdminName]=useState("");
+  const admins=appData.admins||[];
+  const saveAdmins=(list)=>{const nd={...appData,admins:list};setAppData(nd);save(nd);};
+  const addAdmin=()=>{const n=newAdminName.trim();if(!n||admins.includes(n))return;saveAdmins([...admins,n]);setNewAdminName("");showToast(`${n} is now an admin`);};
+  const removeAdmin=(n)=>{saveAdmins(admins.filter(a=>a!==n));showToast(`${n} removed from admins`);};
 
   const showToast=(msg)=>{setToast(msg);setTimeout(()=>setToast(null),2500);};
 
@@ -493,8 +498,33 @@ function AdminPanel({pillars,appData,setAppData,onUpdatePillars}){
           </div>
           <div>
             <div style={{fontFamily:"'DM Serif Display',serif",fontSize:20,color:B.charcoal}}>Admin Panel</div>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:B.g3}}>Manage pillars, deliverables, and assign owners</div>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:B.g3}}>Manage pillars, deliverables, assign owners, and admin access</div>
           </div>
+        </div>
+
+        {/* Team Admins */}
+        <div style={{marginBottom:24,padding:"16px 18px",background:B.cream,borderRadius:12,border:`1px solid ${B.g2}`}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke={B.charcoal} strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:700,color:B.charcoal,textTransform:"uppercase",letterSpacing:".06em"}}>Team Admins</span>
+            {!isRootAdmin&&<span style={{fontSize:10,color:B.g3,fontStyle:"italic",fontWeight:400,textTransform:"none",letterSpacing:0}}>— managed by root admin</span>}
+          </div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:isRootAdmin?10:0}}>
+            {admins.length===0&&<span style={{fontSize:12,color:B.g3,fontStyle:"italic"}}>No delegated admins yet.</span>}
+            {admins.map(n=>(
+              <span key={n} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"4px 10px 4px 4px",background:B.white,borderRadius:20,border:`1px solid ${B.g2}`,fontSize:11,fontWeight:500,color:B.charcoal}}>
+                <Initials name={n} size={22} bg={B.goldDark+"33"} color={B.goldDark}/>
+                {n}
+                {isRootAdmin&&<button onClick={()=>removeAdmin(n)} title={`Remove ${n}`} style={{marginLeft:2,background:"none",border:"none",cursor:"pointer",color:B.g3,fontSize:14,lineHeight:1,padding:"0 2px",borderRadius:"50%"}} onMouseOver={e=>e.currentTarget.style.color=B.danger} onMouseOut={e=>e.currentTarget.style.color=B.g3}>×</button>}
+              </span>
+            ))}
+          </div>
+          {isRootAdmin&&(
+            <div style={{display:"flex",gap:6,background:B.white,borderRadius:10,padding:"3px 3px 3px 12px",border:`1px solid ${B.g2}`}}>
+              <input type="text" placeholder="Add admin by name (must match their login name)…" value={newAdminName} onChange={e=>setNewAdminName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addAdmin()} style={{flex:1,fontFamily:"'DM Sans',sans-serif",fontSize:12,border:"none",outline:"none",background:"transparent",color:B.charcoal,padding:"5px 0"}}/>
+              <Btn onClick={addAdmin} disabled={!newAdminName.trim()||admins.includes(newAdminName.trim())} variant={{color:B.goldDark}} size="sm">Grant Admin</Btn>
+            </div>
+          )}
         </div>
 
         {pillars.map((p,pi)=>(
@@ -615,7 +645,8 @@ export default function App(){
   const updatePillars=(newP)=>{const next={...data,pillars:newP};setData(next);save(next);};
 
   const pillars=data?.pillars||DEFAULT_PILLARS;
-  const isAdminActive=data?.isAdmin&&!staffPreview;
+  const isDelegatedAdmin=(data?.admins||[]).includes(data?.userName||"");
+  const isAdminActive=(data?.isAdmin||isDelegatedAdmin)&&!staffPreview;
   const pillar=pillars[active]||pillars[0];
   const avgProg=(p)=>{if(!p.goals.length)return 0;const ps=p.goals.map(g=>data?.progress[g.id]??g.progress);return ps.reduce((a,b)=>a+b,0)/ps.length;};
   const totalGoals=pillars.reduce((a,p)=>a+p.goals.length,0);
@@ -708,7 +739,7 @@ export default function App(){
             <button key={v.k} onClick={()=>setView(v.k)} style={{padding:"10px 18px",border:"none",borderBottom:view===v.k?`3px solid ${B.carmine}`:"3px solid transparent",background:"transparent",fontSize:12,fontWeight:view===v.k?700:500,color:view===v.k?B.carmine:B.g4,cursor:"pointer",marginBottom:-2,transition:"all .2s"}}>{v.l}</button>
           ))}
           <div style={{flex:1}}/>
-          {data.isAdmin?(
+          {(data.isAdmin||isDelegatedAdmin)?(
             <div style={{display:"flex",gap:6,alignItems:"center"}}>
               {isAdminActive&&(
                 <button onClick={()=>setView("admin")} style={{padding:"7px 14px",border:"none",borderBottom:view==="admin"?`3px solid ${B.gold}`:"3px solid transparent",background:"transparent",fontSize:12,fontWeight:view==="admin"?700:500,color:view==="admin"?B.goldDark:B.g4,cursor:"pointer",marginBottom:-2,display:"flex",alignItems:"center",gap:5}}>
@@ -723,7 +754,7 @@ export default function App(){
                   <><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M1 12s3-7 9-7 9 7 9 7-3 7-9 7-9-7-9-7z"/><circle cx="10" cy="12" r="3"/></svg>Staff View</>
                 )}
               </button>
-              <button onClick={handleSignOut} style={{padding:"7px 12px",border:"none",background:"transparent",fontSize:11,color:B.g3,cursor:"pointer",marginBottom:0,textDecoration:"underline"}}>Sign Out</button>
+              {data.isAdmin&&<button onClick={handleSignOut} style={{padding:"7px 12px",border:"none",background:"transparent",fontSize:11,color:B.g3,cursor:"pointer",marginBottom:0,textDecoration:"underline"}}>Sign Out</button>}
             </div>
           ):(
             <button onClick={()=>setShowLogin(true)} style={{padding:"7px 14px",border:"none",background:"transparent",fontSize:11,color:B.g3,cursor:"pointer",marginBottom:-2,display:"flex",alignItems:"center",gap:5}}>
@@ -737,7 +768,7 @@ export default function App(){
       {/* CONTENT */}
       <div style={{maxWidth:920,margin:"0 auto",padding:"0 24px 48px"}}>
         {view==="admin"&&isAdminActive?(
-          <AdminPanel pillars={pillars} appData={data} setAppData={setData} onUpdatePillars={updatePillars}/>
+          <AdminPanel pillars={pillars} appData={data} setAppData={setData} onUpdatePillars={updatePillars} isRootAdmin={!!data.isAdmin}/>
         ):view==="alignment"?(
           <div className="fade-up" style={{background:B.white,borderRadius:14,overflow:"hidden",border:`1px solid ${B.g2}`}}>
             <div style={{background:B.charcoal,padding:"20px 22px",color:"#fff",position:"relative",overflow:"hidden"}}>
