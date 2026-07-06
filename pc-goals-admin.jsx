@@ -124,7 +124,7 @@ async function save(d){
 function makeDefaults(pillars){
   const s={},c={},p={};
   pillars.forEach(pl=>pl.goals.forEach(g=>{s[g.id]=s[g.id]||[];c[g.id]=c[g.id]||[];p[g.id]=p[g.id]??g.progress;}));
-  return {signups:s,comments:c,progress:p,pillars,admins:[]};
+  return {signups:s,comments:c,progress:p,pillars,admins:[],surveyActions:[]};
 }
 
 const FONTS=`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');`;
@@ -447,6 +447,170 @@ function DeliverableCard({goal,pillar,appData,setAppData,userName,index,isAdmin}
   );
 }
 
+// ── SURVEY VIEW (report iframe + improvement actions) ──
+const SURVEY_THEMES=[
+  {key:"collaboration",label:"Collaboration & Silos",color:"#1F3864"},
+  {key:"efficiency",label:"Efficiency",color:"#2E75B6"},
+  {key:"workload",label:"Workload Pacing",color:"#B94700"},
+  {key:"feedback",label:"Feedback & Connection",color:"#005844"},
+  {key:"growth",label:"Professional Growth",color:"#AE2573"},
+  {key:"other",label:"Other",color:"#5a6872"},
+];
+const STATUS_META={
+  todo:{label:"To Do",bg:"#F2F0EB",color:B.g4},
+  inprogress:{label:"In Progress",bg:"#FFF6DC",color:B.goldDark},
+  done:{label:"Done",bg:B.successLight,color:B.success},
+};
+
+function SurveyView({appData,setAppData,userName,isAdmin}){
+  const[showForm,setShowForm]=useState(false);
+  const[actionText,setActionText]=useState("");
+  const[actionTheme,setActionTheme]=useState("collaboration");
+  const[actionOwner,setActionOwner]=useState("");
+  const[filterTheme,setFilterTheme]=useState("all");
+
+  const actions=appData?.surveyActions||[];
+  const update=(fn)=>{const next={...appData};fn(next);setAppData(next);save(next);};
+
+  const addAction=()=>{
+    const text=actionText.trim();
+    if(!text)return;
+    const id="sa_"+Date.now();
+    const d=new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+    update(n=>{n.surveyActions=[...actions,{id,text,theme:actionTheme,owner:actionOwner.trim(),status:"todo",author:userName,date:d}];});
+    setActionText("");setActionOwner("");setActionTheme("collaboration");setShowForm(false);
+  };
+  const deleteAction=(id)=>update(n=>{n.surveyActions=actions.filter(a=>a.id!==id);});
+  const cycleStatus=(id)=>update(n=>{
+    const order=["todo","inprogress","done"];
+    n.surveyActions=actions.map(a=>{if(a.id!==id)return a;const i=order.indexOf(a.status);return{...a,status:order[(i+1)%3]};});
+  });
+
+  const shown=filterTheme==="all"?actions:actions.filter(a=>a.theme===filterTheme);
+  const th=SURVEY_THEMES.find(t=>t.key===filterTheme);
+
+  return(
+    <div className="fade-up">
+      {/* Survey report */}
+      <div style={{borderRadius:14,overflow:"hidden",border:`1px solid ${B.g2}`,background:B.white,boxShadow:`0 2px 12px ${B.charcoal}0a`,marginBottom:24}}>
+        <iframe srcDoc={SURVEY_HTML} style={{width:"100%",height:860,border:"none",display:"block"}} title="P&C Team Engagement Survey Results"/>
+      </div>
+
+      {/* Improvement Actions */}
+      <div style={{background:B.white,borderRadius:14,border:`1px solid ${B.g2}`,boxShadow:`0 2px 12px ${B.charcoal}0a`,overflow:"hidden"}}>
+        {/* Header */}
+        <div style={{background:B.charcoal,padding:"18px 22px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+          <div>
+            <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".1em",color:"rgba(255,255,255,.6)",marginBottom:3}}>Survey Follow-Up</div>
+            <div style={{fontSize:16,fontWeight:700,color:"#fff"}}>Improvement Actions</div>
+          </div>
+          <button onClick={()=>setShowForm(v=>!v)} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 16px",background:showForm?"rgba(255,255,255,.15)":B.carmine,border:"none",borderRadius:8,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",transition:"background .2s"}}>
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="10" y1="3" x2="10" y2="17"/><line x1="3" y1="10" x2="17" y2="10"/></svg>
+            {showForm?"Cancel":"Add Action"}
+          </button>
+        </div>
+
+        {/* Add form */}
+        {showForm&&(
+          <div style={{padding:"18px 22px",borderBottom:`1px solid ${B.g2}`,background:B.cream}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:8,marginBottom:10}}>
+              <textarea
+                value={actionText} onChange={e=>setActionText(e.target.value)}
+                placeholder="Describe the improvement action…"
+                rows={2}
+                style={{width:"100%",padding:"10px 12px",fontSize:13,border:`1.5px solid ${B.g2}`,borderRadius:8,resize:"vertical",fontFamily:"inherit",outline:"none",color:B.charcoal}}
+              />
+              <button onClick={addAction} disabled={!actionText.trim()||!userName}
+                style={{padding:"0 18px",background:B.carmine,color:"#fff",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:actionText.trim()&&userName?"pointer":"not-allowed",opacity:actionText.trim()&&userName?1:.5,whiteSpace:"nowrap",alignSelf:"stretch"}}>
+                Save
+              </button>
+            </div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <select value={actionTheme} onChange={e=>setActionTheme(e.target.value)}
+                style={{padding:"7px 10px",fontSize:12,border:`1px solid ${B.g2}`,borderRadius:7,color:B.charcoal,background:"#fff",flex:"1 1 160px"}}>
+                {SURVEY_THEMES.map(t=><option key={t.key} value={t.key}>{t.label}</option>)}
+              </select>
+              <input value={actionOwner} onChange={e=>setActionOwner(e.target.value)}
+                placeholder="Owner (optional)"
+                style={{padding:"7px 10px",fontSize:12,border:`1px solid ${B.g2}`,borderRadius:7,color:B.charcoal,flex:"1 1 160px",outline:"none"}}
+              />
+            </div>
+            {!userName&&<p style={{margin:"8px 0 0",fontSize:12,color:B.danger}}>Set your name at the top of the page before saving.</p>}
+          </div>
+        )}
+
+        {/* Filter chips */}
+        {actions.length>0&&(
+          <div style={{padding:"12px 22px",borderBottom:`1px solid ${B.g2}`,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+            <span style={{fontSize:11,color:B.g4,marginRight:4}}>Filter:</span>
+            {["all",...SURVEY_THEMES.map(t=>t.key)].map(k=>{
+              const t=SURVEY_THEMES.find(x=>x.key===k);
+              const active=filterTheme===k;
+              const cnt=k==="all"?actions.length:actions.filter(a=>a.theme===k).length;
+              if(k!=="all"&&cnt===0)return null;
+              return(
+                <button key={k} onClick={()=>setFilterTheme(k)}
+                  style={{padding:"4px 10px",borderRadius:20,border:`1.5px solid ${active?(t?t.color:B.charcoal):"transparent"}`,background:active?(t?t.color+"18":B.g2):B.g1,color:active?(t?t.color:B.charcoal):B.g4,fontSize:11,fontWeight:active?700:500,cursor:"pointer",transition:"all .15s"}}>
+                  {k==="all"?"All themes":t?.label} {cnt}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Action list */}
+        <div style={{padding:shown.length>0?"0":"24px 22px"}}>
+          {shown.length===0?(
+            <div style={{textAlign:"center",padding:"32px 0",color:B.g3}}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{display:"block",margin:"0 auto 10px",opacity:.4}}><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+              <div style={{fontSize:13}}>{filterTheme==="all"?"No actions yet — add the first one above.":"No actions for this theme."}</div>
+            </div>
+          ):shown.map((a,i)=>{
+            const tm=SURVEY_THEMES.find(t=>t.key===a.theme)||SURVEY_THEMES[5];
+            const sm=STATUS_META[a.status]||STATUS_META.todo;
+            const canEdit=isAdmin||a.author===userName;
+            return(
+              <div key={a.id} style={{padding:"14px 22px",borderBottom:i<shown.length-1?`1px solid ${B.g2}`:"none",display:"flex",gap:12,alignItems:"flex-start"}}>
+                {/* Status toggle circle */}
+                <button onClick={()=>canEdit&&cycleStatus(a.id)} title={canEdit?"Click to advance status":sm.label}
+                  style={{marginTop:2,width:18,height:18,borderRadius:"50%",border:`2px solid ${sm.color}`,background:a.status==="done"?sm.color:"transparent",cursor:canEdit?"pointer":"default",flexShrink:0,transition:"all .2s"}}>
+                  {a.status==="done"&&<svg viewBox="0 0 10 10" width="10" height="10" style={{display:"block",margin:"auto"}}><polyline points="2,5 4.5,7.5 8,3" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+                </button>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,color:a.status==="done"?B.g3:B.charcoal,textDecoration:a.status==="done"?"line-through":"none",lineHeight:1.4,marginBottom:6}}>{a.text}</div>
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+                    <span style={{padding:"2px 8px",borderRadius:12,background:tm.color+"18",color:tm.color,fontSize:10.5,fontWeight:600}}>{tm.label}</span>
+                    <span style={{padding:"2px 8px",borderRadius:12,background:sm.bg,color:sm.color,fontSize:10.5,fontWeight:600,cursor:canEdit?"pointer":"default"}} onClick={()=>canEdit&&cycleStatus(a.id)}>{sm.label}</span>
+                    {a.owner&&<span style={{fontSize:11,color:B.g4}}>Owner: <b>{a.owner}</b></span>}
+                    <span style={{fontSize:11,color:B.g3,marginLeft:"auto"}}>{a.author} · {a.date}</span>
+                  </div>
+                </div>
+                {isAdmin&&(
+                  <button onClick={()=>deleteAction(a.id)} title="Delete action"
+                    style={{padding:4,background:"transparent",border:"none",cursor:"pointer",color:B.g3,flexShrink:0,lineHeight:0}}>
+                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="4" x2="16" y2="16"/><line x1="16" y1="4" x2="4" y2="16"/></svg>
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Summary footer */}
+        {actions.length>0&&(
+          <div style={{padding:"10px 22px",borderTop:`1px solid ${B.g2}`,background:B.cream,display:"flex",gap:16,flexWrap:"wrap"}}>
+            {Object.entries(STATUS_META).map(([k,m])=>{
+              const cnt=actions.filter(a=>a.status===k).length;
+              return cnt>0&&<span key={k} style={{fontSize:11,color:m.color,fontWeight:600}}>{cnt} {m.label}</span>;
+            })}
+            <span style={{fontSize:11,color:B.g3,marginLeft:"auto"}}>{actions.length} action{actions.length!==1?"s":""} total</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── ADMIN PANEL ──
 function AdminPanel({pillars,appData,setAppData,onUpdatePillars,isRootAdmin}){
   const[editPillarIdx,setEditPillarIdx]=useState(null);
@@ -676,6 +840,7 @@ export default function App(){
           if(!shared.comments[g.id])shared.comments[g.id]=[];
           if(shared.progress[g.id]===undefined)shared.progress[g.id]=g.progress;
         }));
+        if(!shared.surveyActions)shared.surveyActions=[];
       } else {
         // First-ever load — seed from code defaults and push to Firebase
         shared=makeDefaults(DEFAULT_PILLARS);
@@ -860,9 +1025,7 @@ export default function App(){
             </div>
           </div>
         ):view==="survey"?(
-          <div className="fade-up" style={{borderRadius:14,overflow:"hidden",border:`1px solid ${B.g2}`,background:B.white,boxShadow:`0 2px 12px ${B.charcoal}0a`}}>
-            <iframe srcDoc={SURVEY_HTML} style={{width:"100%",height:860,border:"none",display:"block"}} title="P&C Team Engagement Survey Results"/>
-          </div>
+          <SurveyView appData={data} setAppData={setData} userName={data?.userName||""} isAdmin={isAdminActive}/>
         ):(
           <>
             {/* Pillar Selector */}
