@@ -1166,15 +1166,19 @@ export default function App(){
             <span style={{display:"inline-block",padding:"3px 12px",borderRadius:4,background:B.carmine,color:"#fff",fontSize:10,fontWeight:700,letterSpacing:".08em",textTransform:"uppercase",marginBottom:10}}>FY 2026/27</span>
             <h1 style={{fontFamily:"'DM Serif Display',serif",fontSize:30,fontWeight:400,color:"#fff",lineHeight:1.1,margin:"0 0 6px"}}>People & Culture Goals</h1>
             <p style={{fontSize:12.5,color:"rgba(255,255,255,.5)",maxWidth:420,margin:0,lineHeight:1.55}}>Explore pillars, track deliverables, join working groups, and share progress.</p>
-            <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
-              <a href="https://nutritionintl.sharepoint.com/:w:/r/sites/M365_NI-ISG2/_layouts/15/Doc.aspx?sourcedoc=%7B8D0C8810-2D29-403F-91E0-23F3F6EAA2A4%7D&file=ISG%202-%20Inception%20Report%20-%20Template%20-%20People%20%26%20Culture.docx&action=default&mobileredirect=true&CID=6bee80c3-a1dd-089c-42cf-0b85fefdf553" target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:5,padding:"5px 12px",borderRadius:6,border:"1px solid rgba(255,255,255,.18)",background:"rgba(255,255,255,.07)",color:"rgba(255,255,255,.65)",fontSize:11,fontWeight:600,textDecoration:"none",transition:"all .2s"}}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                IC2 Inception Report
-              </a>
-              <a href="https://nutritionintl.org/case/" target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:5,padding:"5px 12px",borderRadius:6,border:"1px solid rgba(255,255,255,.18)",background:"rgba(255,255,255,.07)",color:"rgba(255,255,255,.65)",fontSize:11,fontWeight:600,textDecoration:"none",transition:"all .2s"}}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                Second Investment Case (IC2)
-              </a>
+            <div style={{marginTop:14}}>
+              <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:".12em",color:"rgba(255,255,255,.3)",marginBottom:6}}>Key Documents</div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {[
+                  {href:"https://nutritionintl.sharepoint.com/:w:/r/sites/M365_NI-ISG2/_layouts/15/Doc.aspx?sourcedoc=%7B8D0C8810-2D29-403F-91E0-23F3F6EAA2A4%7D&file=ISG%202-%20Inception%20Report%20-%20Template%20-%20People%20%26%20Culture.docx&action=default&mobileredirect=true&CID=6bee80c3-a1dd-089c-42cf-0b85fefdf553",label:"IC2 Inception Report",icon:<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>},
+                  {href:"/people-purpose-performance.pdf",label:"People Purpose & Performance",icon:<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>},
+                  {href:"https://nutritionintl.org/case/",label:"Second Investment Case",icon:<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>},
+                ].map(d=>(
+                  <a key={d.href} href={d.href} target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:5,padding:"5px 12px",borderRadius:6,border:"1px solid rgba(255,255,255,.16)",background:"rgba(255,255,255,.06)",color:"rgba(255,255,255,.6)",fontSize:11,fontWeight:600,textDecoration:"none",transition:"all .2s"}}>
+                    {d.icon}{d.label}
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
           <div className="fade-up" style={{display:"flex",gap:10,marginTop:18,flexWrap:"wrap",animationDelay:".12s"}}>
