@@ -447,9 +447,45 @@ function DeliverableCard({goal,pillar,appData,setAppData,userName,index,isAdmin}
   );
 }
 
-// ── SURVEY VIEW (report iframe + improvement actions) ──
+// ── SURVEY DATA (Q2 FY27 · P&C Team Engagement Survey) ──
+const SURVEY_DATA={
+  periods:["Q1 FY26","Q2 FY26","Q4 FY26","Q2 FY27"],
+  overall:[4.31,4.01,3.95,4.11],
+  questions:[
+    {q:"Engagement with unit activities",     s:[4.5,4.0,3.9,4.1],d:+0.2},
+    {q:"Communication within the unit",       s:[3.9,3.8,3.9,4.0],d:+0.1},
+    {q:"Support from colleagues",             s:[4.6,4.3,4.8,4.3],d:-0.4},
+    {q:"Leadership support & guidance",       s:[4.6,4.2,4.1,4.4],d:+0.3},
+    {q:"Overall work environment",            s:[4.4,3.9,3.9,4.1],d:+0.2},
+    {q:"Professional growth opportunities",   s:[4.1,3.5,3.4,3.6],d:+0.2},
+    {q:"Recognition & appreciation",          s:[4.3,4.3,3.9,4.2],d:+0.3},
+    {q:"Comfort sharing feedback",            s:[4.1,4.1,3.9,4.2],d:+0.4},
+  ],
+  themes:[
+    {c:"#253746",name:"Collaboration & silos",desc:"Some feel more siloed — want cross-team engagement, monthly knowledge-sharing, and unity across locations"},
+    {c:"#2E75B6",name:"Efficiency",desc:"Automate manual and physical work to be more efficient"},
+    {c:"#B94700",name:"Workload pacing",desc:"Heavy workload concentrated at the start of the year"},
+    {c:"#005844",name:"Feedback & connection",desc:"Want timely feedback; an in-person team meet-up would add value"},
+    {c:"#00A88A",name:"Positive notes",desc:"“Pleasure working for this team”, “awesome team”, “wonderful experience”, “keep up the teamwork”"},
+  ],
+  takeaways:[
+    {h:"Engagement recovered in Q2 FY27",b:"(4.11), up +0.15 from Q4 FY26 and near the Q1 FY26 high (4.31), with gains in almost every area."},
+    {h:"Leadership support (4.4) and colleague support (4.3) remain the strongest drivers",b:"though colleague support dipped −0.4 vs Q4 — worth watching."},
+    {h:"Professional growth (3.6) is consistently the weakest area",b:"across all quarters despite a modest rebound — the clearest priority for action."},
+    {h:"Collaboration & silos is the dominant qualitative theme",b:"cross-team engagement and knowledge-sharing across locations would address it directly."},
+  ]
+};
+function scoreC(v){
+  if(v>=4.5)return{bg:"#EAF7F3",c:"#005844"};
+  if(v>=4.2)return{bg:"#EBF5E6",c:"#2D6A0F"};
+  if(v>=4.0)return{bg:"#F2F9E8",c:"#3D7A15"};
+  if(v>=3.7)return{bg:"#FFF8E6",c:"#7A4C00"};
+  return{bg:"#FFF0EE",c:"#9B1C1C"};
+}
+
+// ── SURVEY VIEW ──
 const SURVEY_THEMES=[
-  {key:"collaboration",label:"Collaboration & Silos",color:"#1F3864"},
+  {key:"collaboration",label:"Collaboration & Silos",color:"#253746"},
   {key:"efficiency",label:"Efficiency",color:"#2E75B6"},
   {key:"workload",label:"Workload Pacing",color:"#B94700"},
   {key:"feedback",label:"Feedback & Connection",color:"#005844"},
@@ -471,10 +507,8 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
 
   const actions=appData?.surveyActions||[];
   const update=(fn)=>{const next={...appData};fn(next);setAppData(next);save(next);};
-
   const addAction=()=>{
-    const text=actionText.trim();
-    if(!text)return;
+    const text=actionText.trim();if(!text)return;
     const id="sa_"+Date.now();
     const d=new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
     update(n=>{n.surveyActions=[...actions,{id,text,theme:actionTheme,owner:actionOwner.trim(),status:"todo",author:userName,date:d}];});
@@ -483,43 +517,231 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
   const deleteAction=(id)=>update(n=>{n.surveyActions=actions.filter(a=>a.id!==id);});
   const cycleStatus=(id)=>update(n=>{
     const order=["todo","inprogress","done"];
-    n.surveyActions=actions.map(a=>{if(a.id!==id)return a;const i=order.indexOf(a.status);return{...a,status:order[(i+1)%3]};});
+    n.surveyActions=actions.map(a=>{if(a.id!==id)return a;const idx=order.indexOf(a.status);return{...a,status:order[(idx+1)%3]};});
   });
-
   const shown=filterTheme==="all"?actions:actions.filter(a=>a.theme===filterTheme);
-  const th=SURVEY_THEMES.find(t=>t.key===filterTheme);
+
+  // Trend chart geometry
+  const W=440,H=136,PL=52,PR=18,PT=22,PB=24;
+  const gW=W-PL-PR,gH=H-PT-PB;
+  const tX=(i)=>PL+i*(gW/(SURVEY_DATA.overall.length-1));
+  const tY=(v)=>PT+gH*(1-(v-3.5));
+  const tPts=SURVEY_DATA.overall.map((v,i)=>`${tX(i).toFixed(1)},${tY(v).toFixed(1)}`).join(" ");
+  const lastX=tX(SURVEY_DATA.overall.length-1).toFixed(1);
+  const baseY=(PT+gH).toFixed(1);
+  const tArea=`M ${tX(0).toFixed(1)},${tY(SURVEY_DATA.overall[0]).toFixed(1)} `+
+    SURVEY_DATA.overall.slice(1).map((v,i)=>`L ${tX(i+1).toFixed(1)},${tY(v).toFixed(1)}`).join(" ")+
+    ` L ${lastX},${baseY} L ${tX(0).toFixed(1)},${baseY} Z`;
+
+  // Bar chart geometry
+  const BW=440,BH=224,BPL=190,BPR=46,BPT=8;
+  const bgW=BW-BPL-BPR;
+  const rowH=Math.floor((BH-BPT*2)/SURVEY_DATA.questions.length);
 
   return(
-    <div className="fade-up">
-      {/* Survey report */}
-      <div style={{borderRadius:14,overflow:"hidden",border:`1px solid ${B.g2}`,background:B.white,boxShadow:`0 2px 12px ${B.charcoal}0a`,marginBottom:24}}>
-        <iframe srcDoc={SURVEY_HTML} style={{width:"100%",height:860,border:"none",display:"block"}} title="P&C Team Engagement Survey Results"/>
+    <div className="fade-up" style={{display:"flex",flexDirection:"column",gap:16}}>
+
+      {/* ── Hero header ── */}
+      <div style={{background:B.charcoal,borderRadius:16,padding:"28px 32px",color:"#fff",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:-56,right:-56,width:200,height:200,borderRadius:"50%",border:"1.5px solid rgba(255,255,255,.04)",pointerEvents:"none"}}/>
+        <div style={{position:"absolute",bottom:-32,right:88,width:120,height:120,borderRadius:"50%",border:"1.5px solid rgba(164,52,58,.18)",pointerEvents:"none"}}/>
+        <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".14em",color:"rgba(255,255,255,.4)",marginBottom:12}}>People & Culture · Quarterly Engagement Survey</div>
+        <div style={{display:"flex",alignItems:"flex-end",gap:28,flexWrap:"wrap",marginBottom:18}}>
+          <div>
+            <div style={{fontSize:52,fontWeight:800,lineHeight:1,color:"#fff",fontVariantNumeric:"tabular-nums",letterSpacing:"-.01em"}}>{SURVEY_DATA.overall[3].toFixed(2)}</div>
+            <div style={{fontSize:11.5,color:"rgba(255,255,255,.45)",marginTop:5,letterSpacing:".01em"}}>Overall score &nbsp;·&nbsp; Q2 FY27 &nbsp;·&nbsp; Scale 1–5</div>
+          </div>
+          <div style={{paddingBottom:4}}>
+            <div style={{display:"inline-flex",alignItems:"center",gap:7,padding:"7px 14px",borderRadius:24,background:"rgba(0,168,138,.16)",border:"1px solid rgba(0,168,138,.28)"}}>
+              <svg width="11" height="11" viewBox="0 0 12 12"><polyline points="2,9 6,3 10,9" fill="none" stroke="#00A88A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <span style={{fontSize:13,fontWeight:700,color:"#00A88A",fontVariantNumeric:"tabular-nums"}}>+0.15 vs Q4 FY26</span>
+            </div>
+            <div style={{fontSize:11,color:"rgba(255,255,255,.34)",marginTop:6,paddingLeft:2}}>13 team members responded</div>
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
+          {SURVEY_DATA.periods.map((p,i)=>{
+            const cur=i===SURVEY_DATA.periods.length-1;
+            return(
+              <span key={p} style={{display:"inline-flex",alignItems:"center",gap:4}}>
+                <span style={{padding:"4px 11px",borderRadius:20,background:cur?"rgba(164,52,58,.42)":"rgba(255,255,255,.07)",fontSize:11,fontWeight:cur?700:400,color:cur?"#fff":"rgba(255,255,255,.38)",fontVariantNumeric:"tabular-nums"}}>
+                  {p}&ensp;{SURVEY_DATA.overall[i].toFixed(2)}
+                </span>
+                {i<SURVEY_DATA.periods.length-1&&<span style={{color:"rgba(255,255,255,.16)",fontSize:11}}>›</span>}
+              </span>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Improvement Actions */}
-      <div style={{background:B.white,borderRadius:14,border:`1px solid ${B.g2}`,boxShadow:`0 2px 12px ${B.charcoal}0a`,overflow:"hidden"}}>
-        {/* Header */}
-        <div style={{background:B.charcoal,padding:"18px 22px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
-          <div>
-            <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".1em",color:"rgba(255,255,255,.6)",marginBottom:3}}>Survey Follow-Up</div>
-            <div style={{fontSize:16,fontWeight:700,color:"#fff"}}>Improvement Actions</div>
+      {/* ── KPI strip ── */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10}}>
+        {[
+          {n:"4.4",l:"Leadership",note:"Highest this quarter",ac:B.success},
+          {n:"4.3",l:"Colleague support",note:"Strong · watch trend",ac:"#3D7A15"},
+          {n:"4.2",l:"Recognition",note:"Up +0.3 vs Q4",ac:B.charcoal},
+          {n:"4.2",l:"Feedback comfort",note:"Up +0.4 vs Q4",ac:B.charcoal},
+          {n:"3.6",l:"Prof. growth",note:"Lowest · priority",ac:B.danger},
+        ].map((k,i)=>(
+          <div key={i} style={{background:B.white,borderRadius:12,padding:"14px 16px",border:`1px solid ${B.g2}`,borderTop:`3px solid ${k.ac}`}}>
+            <div style={{fontSize:28,fontWeight:800,color:k.ac,fontVariantNumeric:"tabular-nums",lineHeight:1,marginBottom:4}}>{k.n}</div>
+            <div style={{fontSize:11.5,fontWeight:700,color:B.charcoal,lineHeight:1.25,marginBottom:2}}>{k.l}</div>
+            <div style={{fontSize:10,color:B.g3,lineHeight:1.3}}>{k.note}</div>
           </div>
-          <button onClick={()=>setShowForm(v=>!v)} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 16px",background:showForm?"rgba(255,255,255,.15)":B.carmine,border:"none",borderRadius:8,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",transition:"background .2s"}}>
-            <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="10" y1="3" x2="10" y2="17"/><line x1="3" y1="10" x2="17" y2="10"/></svg>
+        ))}
+      </div>
+
+      {/* ── Score table ── */}
+      <div style={{background:B.white,borderRadius:14,border:`1px solid ${B.g2}`,overflow:"hidden"}}>
+        <div style={{padding:"14px 20px 10px",borderBottom:`1px solid ${B.g2}`}}>
+          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".1em",color:B.g3}}>Score by question — all survey periods</div>
+        </div>
+        <div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontVariantNumeric:"tabular-nums"}}>
+            <thead>
+              <tr style={{background:B.cream}}>
+                <th style={{padding:"9px 20px",textAlign:"left",fontSize:10.5,fontWeight:700,color:B.g4,borderBottom:`1px solid ${B.g2}`,minWidth:200,whiteSpace:"nowrap"}}>Question</th>
+                {SURVEY_DATA.periods.map((p,i)=>{
+                  const cur=i===SURVEY_DATA.periods.length-1;
+                  return(
+                    <th key={p} style={{padding:"9px 14px",textAlign:"center",fontSize:10.5,fontWeight:700,color:cur?B.charcoal:B.g3,borderBottom:`1px solid ${B.g2}`,width:72,background:cur?"#F8F9FB":"transparent"}}>
+                      {cur?<span style={{borderBottom:`2px solid ${B.carmine}`,paddingBottom:2}}>{p}</span>:p}
+                    </th>
+                  );
+                })}
+                <th style={{padding:"9px 14px",textAlign:"center",fontSize:10.5,fontWeight:700,color:B.g3,borderBottom:`1px solid ${B.g2}`,width:62}}>Δ vs Q4</th>
+              </tr>
+            </thead>
+            <tbody>
+              {SURVEY_DATA.questions.map((row,ri)=>(
+                <tr key={ri} style={{borderBottom:ri<SURVEY_DATA.questions.length-1?`1px solid ${B.g2}`:"none"}}>
+                  <td style={{padding:"9px 20px",fontSize:12.5,color:B.charcoal,lineHeight:1.3}}>{row.q}</td>
+                  {row.s.map((s,j)=>{
+                    const cur=j===row.s.length-1;
+                    const {bg,c}=scoreC(s);
+                    return(
+                      <td key={j} style={{padding:"9px 14px",textAlign:"center",fontSize:13,fontWeight:cur?700:400,background:cur?bg:"transparent",color:cur?c:B.g3}}>
+                        {s.toFixed(1)}
+                      </td>
+                    );
+                  })}
+                  <td style={{padding:"9px 14px",textAlign:"center",fontSize:12,fontWeight:600,color:row.d>0?B.success:row.d<0?B.danger:B.g3}}>
+                    {row.d>0?`▲ +${row.d.toFixed(1)}`:row.d<0?`▼ ${row.d.toFixed(1)}`:"—"}
+                  </td>
+                </tr>
+              ))}
+              <tr style={{background:B.cream,borderTop:`2px solid ${B.g2}`}}>
+                <td style={{padding:"10px 20px",fontSize:12.5,fontWeight:700,color:B.charcoal}}>Overall average</td>
+                {SURVEY_DATA.overall.map((v,j)=>{
+                  const cur=j===SURVEY_DATA.overall.length-1;
+                  const {bg,c}=scoreC(v);
+                  return(
+                    <td key={j} style={{padding:"10px 14px",textAlign:"center",fontSize:13,fontWeight:700,background:cur?bg:"transparent",color:cur?c:B.charcoal}}>
+                      {v.toFixed(2)}
+                    </td>
+                  );
+                })}
+                <td style={{padding:"10px 14px",textAlign:"center",fontSize:12,fontWeight:700,color:B.success}}>▲ +0.16</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── Charts ── */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+        <div style={{background:B.white,borderRadius:14,border:`1px solid ${B.g2}`,padding:"16px 18px 10px"}}>
+          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".1em",color:B.g3,marginBottom:10}}>Overall engagement trend</div>
+          <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{display:"block",overflow:"visible"}}>
+            {[3.5,3.75,4.0,4.25,4.5].map(gv=>(
+              <g key={gv}>
+                <line x1={PL} y1={tY(gv).toFixed(1)} x2={W-PR} y2={tY(gv).toFixed(1)} stroke="#E3E7EB" strokeWidth="1"/>
+                <text x={PL-6} y={(tY(gv)+4).toFixed(1)} fontSize="9" fill="#98A4AE" textAnchor="end" fontFamily="Arial">{gv.toFixed(2)}</text>
+              </g>
+            ))}
+            <path d={tArea} fill={`${B.carmine}0C`}/>
+            <polyline points={tPts} fill="none" stroke={B.carmine} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"/>
+            {SURVEY_DATA.overall.map((v,i)=>(
+              <g key={i}>
+                <circle cx={tX(i).toFixed(1)} cy={tY(v).toFixed(1)} r="4.5" fill={B.carmine} stroke="#fff" strokeWidth="2"/>
+                <text x={tX(i).toFixed(1)} y={(tY(v)-10).toFixed(1)} fontSize="10.5" fill={B.charcoal} textAnchor="middle" fontFamily="Arial" fontWeight="700">{v.toFixed(2)}</text>
+                <text x={tX(i).toFixed(1)} y={(H-1).toFixed(1)} fontSize="9" fill="#98A4AE" textAnchor="middle" fontFamily="Arial">{SURVEY_DATA.periods[i]}</text>
+              </g>
+            ))}
+          </svg>
+        </div>
+        <div style={{background:B.white,borderRadius:14,border:`1px solid ${B.g2}`,padding:"16px 18px 10px"}}>
+          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".1em",color:B.g3,marginBottom:10}}>Q2 FY27 — scores by question</div>
+          <svg viewBox={`0 0 ${BW} ${BH}`} width="100%" style={{display:"block"}}>
+            {SURVEY_DATA.questions.map((row,i)=>{
+              const v=row.s[3];
+              const {bg,c}=scoreC(v);
+              const y=BPT+i*rowH;
+              const bW=(v/5)*bgW;
+              const words=row.q.split(" ");
+              const label=words.slice(0,3).join(" ")+(words.length>3?"…":"");
+              return(
+                <g key={i}>
+                  <text x={BPL-8} y={y+rowH/2+4} fontSize="10" fill={B.g4} textAnchor="end" fontFamily="Arial">{label}</text>
+                  <rect x={BPL} y={y+4} width={bgW} height={rowH-9} fill="#F4F5F8" rx="3"/>
+                  <rect x={BPL} y={y+4} width={bW} height={rowH-9} fill={bg} rx="3"/>
+                  <text x={BPL+bW+5} y={y+rowH/2+4} fontSize="11" fill={c} fontWeight="700" fontFamily="Arial">{v.toFixed(1)}</text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      </div>
+
+      {/* ── Comment themes ── */}
+      <div style={{background:B.white,borderRadius:14,border:`1px solid ${B.g2}`,overflow:"hidden"}}>
+        <div style={{padding:"14px 20px 10px",borderBottom:`1px solid ${B.g2}`}}>
+          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".1em",color:B.g3}}>Comment themes · Q2 FY27</div>
+        </div>
+        {SURVEY_DATA.themes.map((t,i)=>(
+          <div key={i} style={{display:"flex",gap:16,padding:"13px 20px",borderBottom:i<SURVEY_DATA.themes.length-1?`1px solid ${B.g2}`:"none",alignItems:"flex-start"}}>
+            <div style={{width:3,borderRadius:2,background:t.c,flexShrink:0,alignSelf:"stretch",minHeight:24}}/>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:700,color:B.charcoal,marginBottom:2}}>{t.name}</div>
+              <div style={{fontSize:12.5,color:B.g4,lineHeight:1.45}}>{t.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Key takeaways ── */}
+      <div style={{background:B.carmine,borderRadius:14,padding:"22px 26px"}}>
+        <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".14em",color:"rgba(255,255,255,.52)",marginBottom:14}}>Key takeaways</div>
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          {SURVEY_DATA.takeaways.map((t,i)=>(
+            <div key={i} style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+              <div style={{width:22,height:22,borderRadius:"50%",background:"rgba(255,255,255,.14)",border:"1px solid rgba(255,255,255,.2)",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10.5,fontWeight:700,color:"rgba(255,255,255,.85)",marginTop:2}}>{i+1}</div>
+              <div style={{fontSize:13.5,color:"rgba(255,255,255,.95)",lineHeight:1.55}}>
+                <strong style={{fontWeight:700}}>{t.h}</strong> — {t.b}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Improvement Actions ── */}
+      <div style={{background:B.white,borderRadius:14,border:`1px solid ${B.g2}`,overflow:"hidden"}}>
+        <div style={{padding:"16px 22px",borderBottom:`1px solid ${B.g2}`,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+          <div>
+            <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".1em",color:B.g3,marginBottom:3}}>Survey follow-up</div>
+            <div style={{fontSize:16,fontWeight:700,color:B.charcoal}}>Improvement Actions</div>
+          </div>
+          <button onClick={()=>setShowForm(v=>!v)} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 16px",background:showForm?B.g1:B.carmine,border:`1px solid ${showForm?B.g2:"transparent"}`,borderRadius:8,color:showForm?B.g4:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",transition:"all .2s"}}>
+            <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="10" y1="3" x2="10" y2="17"/><line x1="3" y1="10" x2="17" y2="10"/></svg>
             {showForm?"Cancel":"Add Action"}
           </button>
         </div>
 
-        {/* Add form */}
         {showForm&&(
-          <div style={{padding:"18px 22px",borderBottom:`1px solid ${B.g2}`,background:B.cream}}>
+          <div style={{padding:"16px 22px",borderBottom:`1px solid ${B.g2}`,background:B.cream}}>
             <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:8,marginBottom:10}}>
-              <textarea
-                value={actionText} onChange={e=>setActionText(e.target.value)}
-                placeholder="Describe the improvement action…"
-                rows={2}
-                style={{width:"100%",padding:"10px 12px",fontSize:13,border:`1.5px solid ${B.g2}`,borderRadius:8,resize:"vertical",fontFamily:"inherit",outline:"none",color:B.charcoal}}
-              />
+              <textarea value={actionText} onChange={e=>setActionText(e.target.value)} placeholder="Describe the improvement action…" rows={2}
+                style={{width:"100%",padding:"10px 12px",fontSize:13,border:`1.5px solid ${B.g2}`,borderRadius:8,resize:"vertical",fontFamily:"Arial,sans-serif",outline:"none",color:B.charcoal,background:B.white}}/>
               <button onClick={addAction} disabled={!actionText.trim()||!userName}
                 style={{padding:"0 18px",background:B.carmine,color:"#fff",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:actionText.trim()&&userName?"pointer":"not-allowed",opacity:actionText.trim()&&userName?1:.5,whiteSpace:"nowrap",alignSelf:"stretch"}}>
                 Save
@@ -530,19 +752,16 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
                 style={{padding:"7px 10px",fontSize:12,border:`1px solid ${B.g2}`,borderRadius:7,color:B.charcoal,background:"#fff",flex:"1 1 160px"}}>
                 {SURVEY_THEMES.map(t=><option key={t.key} value={t.key}>{t.label}</option>)}
               </select>
-              <input value={actionOwner} onChange={e=>setActionOwner(e.target.value)}
-                placeholder="Owner (optional)"
-                style={{padding:"7px 10px",fontSize:12,border:`1px solid ${B.g2}`,borderRadius:7,color:B.charcoal,flex:"1 1 160px",outline:"none"}}
-              />
+              <input value={actionOwner} onChange={e=>setActionOwner(e.target.value)} placeholder="Owner (optional)"
+                style={{padding:"7px 10px",fontSize:12,border:`1px solid ${B.g2}`,borderRadius:7,color:B.charcoal,flex:"1 1 160px",outline:"none"}}/>
             </div>
             {!userName&&<p style={{margin:"8px 0 0",fontSize:12,color:B.danger}}>Set your name at the top of the page before saving.</p>}
           </div>
         )}
 
-        {/* Filter chips */}
         {actions.length>0&&(
-          <div style={{padding:"12px 22px",borderBottom:`1px solid ${B.g2}`,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
-            <span style={{fontSize:11,color:B.g4,marginRight:4}}>Filter:</span>
+          <div style={{padding:"10px 22px",borderBottom:`1px solid ${B.g2}`,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",background:B.cream}}>
+            <span style={{fontSize:11,color:B.g4,marginRight:2}}>Filter:</span>
             {["all",...SURVEY_THEMES.map(t=>t.key)].map(k=>{
               const t=SURVEY_THEMES.find(x=>x.key===k);
               const active=filterTheme===k;
@@ -550,19 +769,18 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
               if(k!=="all"&&cnt===0)return null;
               return(
                 <button key={k} onClick={()=>setFilterTheme(k)}
-                  style={{padding:"4px 10px",borderRadius:20,border:`1.5px solid ${active?(t?t.color:B.charcoal):"transparent"}`,background:active?(t?t.color+"18":B.g2):B.g1,color:active?(t?t.color:B.charcoal):B.g4,fontSize:11,fontWeight:active?700:500,cursor:"pointer",transition:"all .15s"}}>
-                  {k==="all"?"All themes":t?.label} {cnt}
+                  style={{padding:"4px 10px",borderRadius:20,border:`1.5px solid ${active?(t?t.color:B.charcoal):B.g2}`,background:active?(t?t.color+"18":B.g2):"transparent",color:active?(t?t.color:B.charcoal):B.g4,fontSize:11,fontWeight:active?700:500,cursor:"pointer",transition:"all .15s"}}>
+                  {k==="all"?"All":t?.label} ({cnt})
                 </button>
               );
             })}
           </div>
         )}
 
-        {/* Action list */}
-        <div style={{padding:shown.length>0?"0":"24px 22px"}}>
+        <div>
           {shown.length===0?(
             <div style={{textAlign:"center",padding:"32px 0",color:B.g3}}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{display:"block",margin:"0 auto 10px",opacity:.4}}><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{display:"block",margin:"0 auto 8px",opacity:.35}}><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
               <div style={{fontSize:13}}>{filterTheme==="all"?"No actions yet — add the first one above.":"No actions for this theme."}</div>
             </div>
           ):shown.map((a,i)=>{
@@ -570,15 +788,14 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
             const sm=STATUS_META[a.status]||STATUS_META.todo;
             const canEdit=isAdmin||a.author===userName;
             return(
-              <div key={a.id} style={{padding:"14px 22px",borderBottom:i<shown.length-1?`1px solid ${B.g2}`:"none",display:"flex",gap:12,alignItems:"flex-start"}}>
-                {/* Status toggle circle */}
-                <button onClick={()=>canEdit&&cycleStatus(a.id)} title={canEdit?"Click to advance status":sm.label}
-                  style={{marginTop:2,width:18,height:18,borderRadius:"50%",border:`2px solid ${sm.color}`,background:a.status==="done"?sm.color:"transparent",cursor:canEdit?"pointer":"default",flexShrink:0,transition:"all .2s"}}>
+              <div key={a.id} style={{padding:"13px 22px",borderBottom:i<shown.length-1?`1px solid ${B.g2}`:"none",display:"flex",gap:12,alignItems:"flex-start"}}>
+                <button onClick={()=>canEdit&&cycleStatus(a.id)} title={canEdit?"Advance status":sm.label}
+                  style={{marginTop:3,width:18,height:18,borderRadius:"50%",border:`2px solid ${sm.color}`,background:a.status==="done"?sm.color:"transparent",cursor:canEdit?"pointer":"default",flexShrink:0,transition:"all .2s",padding:0}}>
                   {a.status==="done"&&<svg viewBox="0 0 10 10" width="10" height="10" style={{display:"block",margin:"auto"}}><polyline points="2,5 4.5,7.5 8,3" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>}
                 </button>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,color:a.status==="done"?B.g3:B.charcoal,textDecoration:a.status==="done"?"line-through":"none",lineHeight:1.4,marginBottom:6}}>{a.text}</div>
-                  <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+                  <div style={{fontSize:13,color:a.status==="done"?B.g3:B.charcoal,textDecoration:a.status==="done"?"line-through":"none",lineHeight:1.4,marginBottom:5}}>{a.text}</div>
+                  <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
                     <span style={{padding:"2px 8px",borderRadius:12,background:tm.color+"18",color:tm.color,fontSize:10.5,fontWeight:600}}>{tm.label}</span>
                     <span style={{padding:"2px 8px",borderRadius:12,background:sm.bg,color:sm.color,fontSize:10.5,fontWeight:600,cursor:canEdit?"pointer":"default"}} onClick={()=>canEdit&&cycleStatus(a.id)}>{sm.label}</span>
                     {a.owner&&<span style={{fontSize:11,color:B.g4}}>Owner: <b>{a.owner}</b></span>}
@@ -586,7 +803,7 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
                   </div>
                 </div>
                 {isAdmin&&(
-                  <button onClick={()=>deleteAction(a.id)} title="Delete action"
+                  <button onClick={()=>deleteAction(a.id)} title="Delete"
                     style={{padding:4,background:"transparent",border:"none",cursor:"pointer",color:B.g3,flexShrink:0,lineHeight:0}}>
                     <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="4" x2="16" y2="16"/><line x1="16" y1="4" x2="4" y2="16"/></svg>
                   </button>
@@ -596,7 +813,6 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
           })}
         </div>
 
-        {/* Summary footer */}
         {actions.length>0&&(
           <div style={{padding:"10px 22px",borderTop:`1px solid ${B.g2}`,background:B.cream,display:"flex",gap:16,flexWrap:"wrap"}}>
             {Object.entries(STATUS_META).map(([k,m])=>{
