@@ -569,6 +569,82 @@ function AdminPanel({pillars,appData,setAppData,onUpdatePillars,isRootAdmin}){
   );
 }
 
+// ── QUARTERLY SURVEY REPORT (HTML embedded from P&C Team Engagement Survey Q4 workbook) ──
+const SURVEY_HTML = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>P&amp;C Team Engagement Survey &mdash; Report</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#f4f6fa;color:#222;line-height:1.45}
+.wrap{max-width:960px;margin:0 auto;padding:32px 24px 60px}
+header{background:#1F3864;color:#fff;border-radius:12px;padding:28px 32px;margin-bottom:24px}
+header h1{margin:0 0 6px;font-size:24px}
+header p{margin:0;opacity:.85;font-size:14px}
+.kpis{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+.kpi{flex:1;min-width:160px;background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-top:3px solid #1F3864}
+.kpi .n{font-size:26px;font-weight:700;color:#1F3864}
+.kpi .l{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+.card{background:#fff;border-radius:12px;padding:24px 28px;margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.card h2{margin:0 0 16px;font-size:17px;color:#1F3864;border-bottom:2px solid #eef1f6;padding-bottom:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#1F3864;color:#fff;padding:9px 8px;text-align:center;font-weight:600}
+th:first-child{text-align:left}
+td{padding:8px;border-bottom:1px solid #eef1f6}
+td.q{text-align:left;color:#333}
+td.score{text-align:center;font-weight:600;width:74px;color:#222}
+td.tr{text-align:center;width:70px;font-weight:600}
+tr.overall td{font-weight:700;background:#eef1f6}
+tr.overall td.score.ovr{background:#dbe3f1}
+.up{color:#2e7d32}.down{color:#c62828}.flat{color:#888}
+.ax{font-size:10px;fill:#888}.val{font-size:11px;fill:#333;font-weight:600}.qlab{font-size:11px;fill:#333}
+.theme{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0;align-items:flex-start}
+.theme:last-child{border-bottom:none}
+.tdot{width:12px;height:12px;border-radius:50%;margin-top:4px;flex:none}
+.tname{font-weight:700;color:#1F3864;font-size:14px}
+.tdesc{font-size:13px;color:#555}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:720px){.two{grid-template-columns:1fr}}
+ul.take{margin:0;padding-left:20px}ul.take li{margin:7px 0;font-size:14px}
+.foot{text-align:center;color:#999;font-size:12px;margin-top:8px}
+</style></head>
+<body><div class="wrap">
+<header>
+<h1>P&amp;C Team Engagement Survey</h1>
+<p>Quarterly results &amp; analysis &mdash; Q1 FY26 &rarr; Q2 FY26 &rarr; Q4 FY26 &rarr; Q2 FY27 &nbsp;|&nbsp; Scores on a 1&ndash;5 scale</p>
+</header>
+
+<div class="kpis">
+<div class="kpi"><div class="n">4.11</div><div class="l">Overall score (Q2 FY27)</div></div>
+<div class="kpi"><div class="n">+0.15</div><div class="l">Change vs Q4 FY26</div></div>
+<div class="kpi"><div class="n">13</div><div class="l">Responses (Q2 FY27)</div></div>
+<div class="kpi"><div class="n">4.4</div><div class="l">Top area: Leadership</div></div>
+<div class="kpi"><div class="n">3.6</div><div class="l">Lowest: Prof. growth</div></div>
+</div>
+
+<div class="card"><h2>Scores by question, all quarters</h2>
+<table><thead><tr><th>Question</th><th>Q1 FY26</th><th>Q2 FY26</th><th>Q4 FY26</th><th>Q2 FY27</th><th>&Delta; vs Q4</th></tr></thead>
+<tbody><tr><td class="q">Engagement with unit activities</td><td class="score" style="background:rgb(177,212,127)">4.5</td><td class="score" style="background:rgb(255,235,132)">4.0</td><td class="score" style="background:rgb(254,218,128)">3.9</td><td class="score" style="background:rgb(243,231,131)">4.1</td><td class="tr"><span class="up">&#9650; +0.2</span></td></tr><tr><td class="q">Communication within the unit</td><td class="score" style="background:rgb(254,222,129)">3.9</td><td class="score" style="background:rgb(253,208,127)">3.8</td><td class="score" style="background:rgb(254,218,128)">3.9</td><td class="score" style="background:rgb(255,235,132)">4.0</td><td class="tr"><span class="up">&#9650; +0.1</span></td></tr><tr><td class="q">Support from colleagues</td><td class="score" style="background:rgb(161,208,126)">4.6</td><td class="score" style="background:rgb(208,221,129)">4.3</td><td class="score" style="background:rgb(138,201,125)">4.8</td><td class="score" style="background:rgb(206,221,129)">4.3</td><td class="tr"><span class="down">&#9660; -0.4</span></td></tr><tr><td class="q">Leadership support &amp; guidance</td><td class="score" style="background:rgb(161,208,126)">4.6</td><td class="score" style="background:rgb(223,226,130)">4.2</td><td class="score" style="background:rgb(235,229,130)">4.1</td><td class="score" style="background:rgb(195,217,128)">4.4</td><td class="tr"><span class="up">&#9650; +0.3</span></td></tr><tr><td class="q">Overall work environment</td><td class="score" style="background:rgb(192,217,128)">4.4</td><td class="score" style="background:rgb(254,222,129)">3.9</td><td class="score" style="background:rgb(254,218,128)">3.9</td><td class="score" style="background:rgb(243,231,131)">4.1</td><td class="tr"><span class="up">&#9650; +0.2</span></td></tr><tr><td class="q">Professional growth opportunities</td><td class="score" style="background:rgb(239,230,131)">4.1</td><td class="score" style="background:rgb(251,170,119)">3.5</td><td class="score" style="background:rgb(250,153,116)">3.4</td><td class="score" style="background:rgb(252,185,122)">3.6</td><td class="tr"><span class="up">&#9650; +0.2</span></td></tr><tr><td class="q">Recognition &amp; appreciation</td><td class="score" style="background:rgb(208,221,129)">4.3</td><td class="score" style="background:rgb(208,221,129)">4.3</td><td class="score" style="background:rgb(254,218,128)">3.9</td><td class="score" style="background:rgb(231,228,130)">4.2</td><td class="tr"><span class="up">&#9650; +0.3</span></td></tr><tr><td class="q">Comfort sharing feedback</td><td class="score" style="background:rgb(239,230,131)">4.1</td><td class="score" style="background:rgb(239,230,131)">4.1</td><td class="score" style="background:rgb(254,218,128)">3.9</td><td class="score" style="background:rgb(218,224,129)">4.2</td><td class="tr"><span class="up">&#9650; +0.4</span></td></tr><tr class="overall"><td class="q">Overall average</td><td class="score ovr">4.3</td><td class="score ovr">4.0</td><td class="score ovr">4.0</td><td class="score ovr">4.1</td><td class="tr"><span class="up">&#9650; +0.2</span></td></tr></tbody></table></div>
+
+<div class="two">
+<div class="card"><h2>Overall engagement trend</h2><svg viewBox="0 0 520 240" width="100%" ><line x1="45" y1="205.0" x2="500" y2="205.0" stroke="#eee"/><text x="37" y="209.0" class="ax" text-anchor="end">3.50</text><line x1="45" y1="158.8" x2="500" y2="158.8" stroke="#eee"/><text x="37" y="162.8" class="ax" text-anchor="end">3.75</text><line x1="45" y1="112.5" x2="500" y2="112.5" stroke="#eee"/><text x="37" y="116.5" class="ax" text-anchor="end">4.00</text><line x1="45" y1="66.2" x2="500" y2="66.2" stroke="#eee"/><text x="37" y="70.2" class="ax" text-anchor="end">4.25</text><line x1="45" y1="20.0" x2="500" y2="20.0" stroke="#eee"/><text x="37" y="24.0" class="ax" text-anchor="end">4.50</text><polyline points="45.0,54.7 196.7,110.2 348.3,121.2 500.0,92.9" fill="none" stroke="#1F3864" stroke-width="2.5"/><circle cx="45.0" cy="54.7" r="4" fill="#1F3864"/><text x="45.0" y="44.7" class="val" text-anchor="middle">4.31</text><circle cx="196.7" cy="110.2" r="4" fill="#1F3864"/><text x="196.7" y="100.2" class="val" text-anchor="middle">4.01</text><circle cx="348.3" cy="121.2" r="4" fill="#1F3864"/><text x="348.3" y="111.2" class="val" text-anchor="middle">3.95</text><circle cx="500.0" cy="92.9" r="4" fill="#1F3864"/><text x="500.0" y="82.9" class="val" text-anchor="middle">4.11</text><text x="45.0" y="230" class="ax" text-anchor="middle">Q1 FY26</text><text x="196.7" y="230" class="ax" text-anchor="middle">Q2 FY26</text><text x="348.3" y="230" class="ax" text-anchor="middle">Q4 FY26</text><text x="500.0" y="230" class="ax" text-anchor="middle">Q2 FY27</text></svg></div>
+<div class="card"><h2>Q2 FY27 scores by question</h2><svg viewBox="0 0 560 287" width="100%"><text x="240" y="27" class="qlab" text-anchor="end">Engagement with unit activities</text><rect x="250" y="14" width="265" height="20" fill="#f0f0f0" rx="3"/><rect x="250" y="14" width="216.1" height="20" fill="rgb(243,231,131)" rx="3"/><text x="472.1" y="29" class="val">4.1</text><text x="240" y="61" class="qlab" text-anchor="end">Communication within the unit</text><rect x="250" y="48" width="265" height="20" fill="#f0f0f0" rx="3"/><rect x="250" y="48" width="212.0" height="20" fill="rgb(255,235,132)" rx="3"/><text x="468.0" y="63" class="val">4.0</text><text x="240" y="95" class="qlab" text-anchor="end">Support from colleagues</text><rect x="250" y="82" width="265" height="20" fill="#f0f0f0" rx="3"/><rect x="250" y="82" width="228.3" height="20" fill="rgb(206,221,129)" rx="3"/><text x="484.3" y="97" class="val">4.3</text><text x="240" y="129" class="qlab" text-anchor="end">Leadership support &amp; guidance</text><rect x="250" y="116" width="265" height="20" fill="#f0f0f0" rx="3"/><rect x="250" y="116" width="232.4" height="20" fill="rgb(195,217,128)" rx="3"/><text x="488.4" y="131" class="val">4.4</text><text x="240" y="163" class="qlab" text-anchor="end">Overall work environment</text><rect x="250" y="150" width="265" height="20" fill="#f0f0f0" rx="3"/><rect x="250" y="150" width="216.1" height="20" fill="rgb(243,231,131)" rx="3"/><text x="472.1" y="165" class="val">4.1</text><text x="240" y="197" class="qlab" text-anchor="end">Professional growth opportunities</text><rect x="250" y="184" width="265" height="20" fill="#f0f0f0" rx="3"/><rect x="250" y="184" width="191.6" height="20" fill="rgb(252,185,122)" rx="3"/><text x="447.6" y="199" class="val">3.6</text><text x="240" y="231" class="qlab" text-anchor="end">Recognition &amp; appreciation</text><rect x="250" y="218" width="265" height="20" fill="#f0f0f0" rx="3"/><rect x="250" y="218" width="220.2" height="20" fill="rgb(231,228,130)" rx="3"/><text x="476.2" y="233" class="val">4.2</text><text x="240" y="265" class="qlab" text-anchor="end">Comfort sharing feedback</text><rect x="250" y="252" width="265" height="20" fill="#f0f0f0" rx="3"/><rect x="250" y="252" width="224.2" height="20" fill="rgb(218,224,129)" rx="3"/><text x="480.2" y="267" class="val">4.2</text></svg></div>
+</div>
+
+<div class="card"><h2>Comment themes (Q2 FY27)</h2>
+<p style="font-size:13px;color:#375623;background:#eaf3e3;padding:10px 14px;border-radius:8px;margin-top:0">Overall sentiment is largely positive &mdash; strong gratitude for a supportive, collaborative team and a &ldquo;safe space&rdquo; with less tension. Suggestions cluster around a few clear themes:</p>
+<div class="theme"><div class="tdot" style="background:#1F3864"></div><div><div class="tname">Collaboration &amp; silos</div><div class="tdesc">Some feel more siloed &mdash; want cross-team engagement, monthly knowledge-sharing, and unity across locations</div></div></div><div class="theme"><div class="tdot" style="background:#2E75B6"></div><div><div class="tname">Efficiency</div><div class="tdesc">Automate manual and physical work to be more efficient</div></div></div><div class="theme"><div class="tdot" style="background:#2E75B6"></div><div><div class="tname">Workload pacing</div><div class="tdesc">Heavy workload concentrated at the start of the year</div></div></div><div class="theme"><div class="tdot" style="background:#2E75B6"></div><div><div class="tname">Feedback &amp; connection</div><div class="tdesc">Want timely feedback; an in-person team meet-up would add value</div></div></div><div class="theme"><div class="tdot" style="background:#548235"></div><div><div class="tname">Positive notes</div><div class="tdesc">&ldquo;Pleasure working for this team&rdquo;, &ldquo;awesome team&rdquo;, &ldquo;wonderful experience&rdquo;, &ldquo;keep up the teamwork&rdquo;</div></div></div></div>
+
+<div class="card"><h2>Key takeaways</h2>
+<ul class="take">
+<li><b>Engagement recovered in Q2 FY27</b> (4.11), up +0.15 from Q4 FY26 and near the Q1 FY26 high (4.31), with gains in almost every area.</li>
+<li><b>Leadership support (4.4) and colleague support (4.3)</b> remain the strongest drivers, though colleague support dipped &minus;0.4 vs Q4 &mdash; worth watching.</li>
+<li><b>Professional growth (3.6) is consistently the weakest area</b> across all quarters despite a modest rebound &mdash; the clearest priority for action.</li>
+<li><b>Collaboration &amp; silos</b> is the dominant qualitative theme; cross-team engagement and knowledge-sharing across locations would address it directly.</li>
+</ul></div>
+
+<div class="foot">Generated from the P&amp;C Team Engagement Survey workbook &middot; 4 survey periods</div>
+</div></body></html>`;
+
 // ── MAIN APP ──
 export default function App(){
   const[active,setActive]=useState(0);
@@ -735,7 +811,7 @@ export default function App(){
       {/* NAV */}
       <div style={{maxWidth:920,margin:"0 auto",padding:"0 24px"}}>
         <div style={{display:"flex",gap:0,marginTop:20,marginBottom:20,borderBottom:`2px solid ${B.g2}`,alignItems:"center"}}>
-          {[{k:"pillars",l:"Goal Pillars"},{k:"alignment",l:"IC2 Alignment"}].map(v=>(
+          {[{k:"pillars",l:"Goal Pillars"},{k:"alignment",l:"IC2 Alignment"},{k:"survey",l:"Team Survey"}].map(v=>(
             <button key={v.k} onClick={()=>setView(v.k)} style={{padding:"10px 18px",border:"none",borderBottom:view===v.k?`3px solid ${B.carmine}`:"3px solid transparent",background:"transparent",fontSize:12,fontWeight:view===v.k?700:500,color:view===v.k?B.carmine:B.g4,cursor:"pointer",marginBottom:-2,transition:"all .2s"}}>{v.l}</button>
           ))}
           <div style={{flex:1}}/>
@@ -782,6 +858,10 @@ export default function App(){
                 <tbody>{CROSS_CUTTING.map((r,i)=><tr key={i} style={{background:i%2===0?B.cream:B.white}}><td style={{padding:"11px 14px",fontWeight:600,color:B.charcoal,borderRadius:"8px 0 0 8px"}}>{r.priority}</td><td style={{padding:"11px 14px",color:B.g4,fontStyle:"italic"}}>{r.enabler}</td><td style={{padding:"11px 14px",color:B.charcoal,borderRadius:"0 8px 8px 0"}}>{r.del}</td></tr>)}</tbody>
               </table>
             </div>
+          </div>
+        ):view==="survey"?(
+          <div className="fade-up" style={{borderRadius:14,overflow:"hidden",border:`1px solid ${B.g2}`,background:B.white,boxShadow:`0 2px 12px ${B.charcoal}0a`}}>
+            <iframe srcDoc={SURVEY_HTML} style={{width:"100%",height:860,border:"none",display:"block"}} title="P&C Team Engagement Survey Results"/>
           </div>
         ):(
           <>
