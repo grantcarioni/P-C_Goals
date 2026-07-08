@@ -1026,105 +1026,6 @@ ul.take{margin:0;padding-left:20px}ul.take li{margin:7px 0;font-size:14px}
 </div></body></html>`;
 
 // ── TEAMS VIEW ──
-function SafetyEcosystem(){
-  const C="#1E3A52",cx=280,cy=170,r=108,nr=42;
-  const nodes=[
-    {a:270,l:["Governance &","Accountability"],s:"Policy · Risk · Accountability"},
-    {a:330,l:["Crisis","Management"],s:"CMT · Procedures · AARs"},
-    {a:30,l:["Resources"],s:"Funding · Staff · Travel"},
-    {a:90,l:["Learning &","Development"],s:"PSS · HEAT · First Aid"},
-    {a:150,l:["Operational","Security"],s:"SRAs · SMPs · ISOS"},
-    {a:210,l:["Communication"],s:"Procedures · Info Security"},
-  ];
-  return(
-    <svg viewBox="0 0 560 340" style={{width:"100%",maxWidth:560,display:"block",margin:"0 auto"}}>
-      {nodes.map((n,i)=>{
-        const rad=n.a*Math.PI/180,nx=cx+r*Math.cos(rad),ny=cy+r*Math.sin(rad);
-        return(<g key={i}>
-          <line x1={cx+44*Math.cos(rad)} y1={cy+44*Math.sin(rad)} x2={nx-nr*Math.cos(rad)} y2={ny-nr*Math.sin(rad)} stroke={C} strokeWidth="1.5" strokeOpacity=".3"/>
-          <circle cx={nx} cy={ny} r={nr} fill="#EEF3F8" stroke={C} strokeWidth="1" strokeOpacity=".2"/>
-          {n.l.map((line,li)=>(
-            <text key={li} x={nx} y={ny+(n.l.length===1?2:-3+li*11)} textAnchor="middle" fill={C} fontSize="8.5" fontWeight="700" fontFamily="Arial,sans-serif">{line}</text>
-          ))}
-          <text x={nx} y={ny+(n.l.length===1?14:19)} textAnchor="middle" fill={C} fontSize="7" fontFamily="Arial,sans-serif" fillOpacity=".55">{n.s}</text>
-        </g>);
-      })}
-      <circle cx={cx} cy={cy} r={44} fill={C}/>
-      <text x={cx} y={cy-8} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="Arial,sans-serif">SAFETY &</text>
-      <text x={cx} y={cy+4} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="Arial,sans-serif">SECURITY</text>
-      <text x={cx} y={cy+16} textAnchor="middle" fill="rgba(255,255,255,.5)" fontSize="7.5" fontFamily="Arial,sans-serif">ECOSYSTEM</text>
-    </svg>
-  );
-}
-
-function HRLifeCycle(){
-  const C=B.carmine,cx=280,cy=165,r=118,nr=30;
-  const items=[
-    {a:270,l:["Recruitment","& Selection"]},
-    {a:306,l:["Contract","Management"]},
-    {a:342,l:["Cyclical","Initiatives"]},
-    {a:18,l:["HR Systems"]},
-    {a:54,l:["Employee","Engagement"]},
-    {a:90,l:["Absence","Management"]},
-    {a:126,l:["Time &","Attendance"]},
-    {a:162,l:["Health &","Safety"]},
-    {a:198,l:["Employee","Relations"]},
-    {a:234,l:["Investigations"]},
-  ];
-  return(
-    <svg viewBox="0 0 560 330" style={{width:"100%",maxWidth:560,display:"block",margin:"0 auto"}}>
-      {items.map((n,i)=>{
-        const rad=n.a*Math.PI/180,nx=cx+r*Math.cos(rad),ny=cy+r*Math.sin(rad);
-        return(<g key={i}>
-          <line x1={cx+46*Math.cos(rad)} y1={cy+46*Math.sin(rad)} x2={nx-nr*Math.cos(rad)} y2={ny-nr*Math.sin(rad)} stroke={C} strokeWidth="1" strokeOpacity=".2"/>
-          <circle cx={nx} cy={ny} r={nr} fill="#FBF0F0" stroke={C} strokeWidth="1" strokeOpacity=".25"/>
-          {n.l.map((line,li)=>(
-            <text key={li} x={nx} y={ny+(n.l.length===1?1:-4+li*10)} textAnchor="middle" fill={C} fontSize="8" fontWeight="700" fontFamily="Arial,sans-serif">{line}</text>
-          ))}
-        </g>);
-      })}
-      <circle cx={cx} cy={cy} r={46} fill={C}/>
-      <text x={cx} y={cy-10} textAnchor="middle" fill="#fff" fontSize="8.5" fontWeight="700" fontFamily="Arial,sans-serif">EMPLOYEE</text>
-      <text x={cx} y={cy+2} textAnchor="middle" fill="#fff" fontSize="8.5" fontWeight="700" fontFamily="Arial,sans-serif">EXPERIENCE</text>
-      <text x={cx} y={cy+14} textAnchor="middle" fill="rgba(255,255,255,.6)" fontSize="6.5" fontFamily="Arial,sans-serif">Engagement · Accountability</text>
-      <text x={cx} y={cy+24} textAnchor="middle" fill="rgba(255,255,255,.6)" fontSize="6.5" fontFamily="Arial,sans-serif">· Compliance</text>
-    </svg>
-  );
-}
-
-function LDCulture(){
-  const C="#005844",cx=280,cy=170,r=112,nr=38;
-  const items=[
-    {a:270,l:["Leadership","Development"]},
-    {a:315,l:["Compliance"]},
-    {a:0,l:["Certification"]},
-    {a:45,l:["Mentoring &","Coaching"]},
-    {a:90,l:["Knowledge","Management"]},
-    {a:135,l:["Learning to","Performance"]},
-    {a:180,l:["Technical &","Behavioural","Skills"]},
-    {a:225,l:["Policy"]},
-  ];
-  return(
-    <svg viewBox="0 0 560 340" style={{width:"100%",maxWidth:560,display:"block",margin:"0 auto"}}>
-      {items.map((n,i)=>{
-        const rad=n.a*Math.PI/180,nx=cx+r*Math.cos(rad),ny=cy+r*Math.sin(rad);
-        const off=n.l.length===1?1:n.l.length===2?-5:-9,lh=n.l.length===3?10:11;
-        return(<g key={i}>
-          <line x1={cx+46*Math.cos(rad)} y1={cy+46*Math.sin(rad)} x2={nx-nr*Math.cos(rad)} y2={ny-nr*Math.sin(rad)} stroke={C} strokeWidth="1.5" strokeOpacity=".3"/>
-          <circle cx={nx} cy={ny} r={nr} fill="#E8F5F1" stroke={C} strokeWidth="1" strokeOpacity=".25"/>
-          {n.l.map((line,li)=>(
-            <text key={li} x={nx} y={ny+off+li*lh} textAnchor="middle" fill={C} fontSize="8.5" fontWeight="700" fontFamily="Arial,sans-serif">{line}</text>
-          ))}
-        </g>);
-      })}
-      <circle cx={cx} cy={cy} r={46} fill={C}/>
-      <text x={cx} y={cy-10} textAnchor="middle" fill="#fff" fontSize="8" fontWeight="700" fontFamily="Arial,sans-serif">SHARED</text>
-      <text x={cx} y={cy+2} textAnchor="middle" fill="#fff" fontSize="8" fontWeight="700" fontFamily="Arial,sans-serif">CONSCIOUSNESS</text>
-      <text x={cx} y={cy+16} textAnchor="middle" fill="rgba(255,255,255,.55)" fontSize="7" fontFamily="Arial,sans-serif">Continuous Learning</text>
-      <text x={cx} y={cy+27} textAnchor="middle" fill="rgba(255,255,255,.55)" fontSize="7" fontFamily="Arial,sans-serif">Culture</text>
-    </svg>
-  );
-}
 
 function TeamsView(){
   const [active,setActive]=useState("safety");
@@ -1173,9 +1074,7 @@ function TeamsView(){
           </div>
           <div style={{borderTop:`1px solid ${ac}20`,paddingTop:18}}>
             <div style={{fontSize:10,fontWeight:700,letterSpacing:".08em",textTransform:"uppercase",color:"#6B7C8A",marginBottom:12}}>{t.fig} — {t.title}</div>
-            {active==="safety"&&<SafetyEcosystem/>}
-            {active==="hr"&&<HRLifeCycle/>}
-            {active==="ld"&&<LDCulture/>}
+            <img src={active==="safety"?"/figure1.png":active==="hr"?"/figure2.png":"/figure3.png"} alt={t.title} style={{width:"100%",borderRadius:4,display:"block"}}/>
           </div>
         </div>
       </div>
