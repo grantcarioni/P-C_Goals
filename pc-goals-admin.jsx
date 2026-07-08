@@ -1025,6 +1025,164 @@ ul.take{margin:0;padding-left:20px}ul.take li{margin:7px 0;font-size:14px}
 <div class="foot">Generated from the P&amp;C Team Engagement Survey workbook &middot; 4 survey periods</div>
 </div></body></html>`;
 
+// ── TEAMS VIEW ──
+function SafetyEcosystem(){
+  const C="#1E3A52",cx=280,cy=170,r=108,nr=42;
+  const nodes=[
+    {a:270,l:["Governance &","Accountability"],s:"Policy · Risk · Accountability"},
+    {a:330,l:["Crisis","Management"],s:"CMT · Procedures · AARs"},
+    {a:30,l:["Resources"],s:"Funding · Staff · Travel"},
+    {a:90,l:["Learning &","Development"],s:"PSS · HEAT · First Aid"},
+    {a:150,l:["Operational","Security"],s:"SRAs · SMPs · ISOS"},
+    {a:210,l:["Communication"],s:"Procedures · Info Security"},
+  ];
+  return(
+    <svg viewBox="0 0 560 340" style={{width:"100%",maxWidth:560,display:"block",margin:"0 auto"}}>
+      {nodes.map((n,i)=>{
+        const rad=n.a*Math.PI/180,nx=cx+r*Math.cos(rad),ny=cy+r*Math.sin(rad);
+        return(<g key={i}>
+          <line x1={cx+44*Math.cos(rad)} y1={cy+44*Math.sin(rad)} x2={nx-nr*Math.cos(rad)} y2={ny-nr*Math.sin(rad)} stroke={C} strokeWidth="1.5" strokeOpacity=".3"/>
+          <circle cx={nx} cy={ny} r={nr} fill="#EEF3F8" stroke={C} strokeWidth="1" strokeOpacity=".2"/>
+          {n.l.map((line,li)=>(
+            <text key={li} x={nx} y={ny+(n.l.length===1?2:-3+li*11)} textAnchor="middle" fill={C} fontSize="8.5" fontWeight="700" fontFamily="Arial,sans-serif">{line}</text>
+          ))}
+          <text x={nx} y={ny+(n.l.length===1?14:19)} textAnchor="middle" fill={C} fontSize="7" fontFamily="Arial,sans-serif" fillOpacity=".55">{n.s}</text>
+        </g>);
+      })}
+      <circle cx={cx} cy={cy} r={44} fill={C}/>
+      <text x={cx} y={cy-8} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="Arial,sans-serif">SAFETY &</text>
+      <text x={cx} y={cy+4} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="Arial,sans-serif">SECURITY</text>
+      <text x={cx} y={cy+16} textAnchor="middle" fill="rgba(255,255,255,.5)" fontSize="7.5" fontFamily="Arial,sans-serif">ECOSYSTEM</text>
+    </svg>
+  );
+}
+
+function HRLifeCycle(){
+  const C=B.carmine,cx=280,cy=165,r=118,nr=30;
+  const items=[
+    {a:270,l:["Recruitment","& Selection"]},
+    {a:306,l:["Contract","Management"]},
+    {a:342,l:["Cyclical","Initiatives"]},
+    {a:18,l:["HR Systems"]},
+    {a:54,l:["Employee","Engagement"]},
+    {a:90,l:["Absence","Management"]},
+    {a:126,l:["Time &","Attendance"]},
+    {a:162,l:["Health &","Safety"]},
+    {a:198,l:["Employee","Relations"]},
+    {a:234,l:["Investigations"]},
+  ];
+  return(
+    <svg viewBox="0 0 560 330" style={{width:"100%",maxWidth:560,display:"block",margin:"0 auto"}}>
+      {items.map((n,i)=>{
+        const rad=n.a*Math.PI/180,nx=cx+r*Math.cos(rad),ny=cy+r*Math.sin(rad);
+        return(<g key={i}>
+          <line x1={cx+46*Math.cos(rad)} y1={cy+46*Math.sin(rad)} x2={nx-nr*Math.cos(rad)} y2={ny-nr*Math.sin(rad)} stroke={C} strokeWidth="1" strokeOpacity=".2"/>
+          <circle cx={nx} cy={ny} r={nr} fill="#FBF0F0" stroke={C} strokeWidth="1" strokeOpacity=".25"/>
+          {n.l.map((line,li)=>(
+            <text key={li} x={nx} y={ny+(n.l.length===1?1:-4+li*10)} textAnchor="middle" fill={C} fontSize="8" fontWeight="700" fontFamily="Arial,sans-serif">{line}</text>
+          ))}
+        </g>);
+      })}
+      <circle cx={cx} cy={cy} r={46} fill={C}/>
+      <text x={cx} y={cy-10} textAnchor="middle" fill="#fff" fontSize="8.5" fontWeight="700" fontFamily="Arial,sans-serif">EMPLOYEE</text>
+      <text x={cx} y={cy+2} textAnchor="middle" fill="#fff" fontSize="8.5" fontWeight="700" fontFamily="Arial,sans-serif">EXPERIENCE</text>
+      <text x={cx} y={cy+14} textAnchor="middle" fill="rgba(255,255,255,.6)" fontSize="6.5" fontFamily="Arial,sans-serif">Engagement · Accountability</text>
+      <text x={cx} y={cy+24} textAnchor="middle" fill="rgba(255,255,255,.6)" fontSize="6.5" fontFamily="Arial,sans-serif">· Compliance</text>
+    </svg>
+  );
+}
+
+function LDCulture(){
+  const C="#005844",cx=280,cy=170,r=112,nr=38;
+  const items=[
+    {a:270,l:["Leadership","Development"]},
+    {a:315,l:["Compliance"]},
+    {a:0,l:["Certification"]},
+    {a:45,l:["Mentoring &","Coaching"]},
+    {a:90,l:["Knowledge","Management"]},
+    {a:135,l:["Learning to","Performance"]},
+    {a:180,l:["Technical &","Behavioural","Skills"]},
+    {a:225,l:["Policy"]},
+  ];
+  return(
+    <svg viewBox="0 0 560 340" style={{width:"100%",maxWidth:560,display:"block",margin:"0 auto"}}>
+      {items.map((n,i)=>{
+        const rad=n.a*Math.PI/180,nx=cx+r*Math.cos(rad),ny=cy+r*Math.sin(rad);
+        const off=n.l.length===1?1:n.l.length===2?-5:-9,lh=n.l.length===3?10:11;
+        return(<g key={i}>
+          <line x1={cx+46*Math.cos(rad)} y1={cy+46*Math.sin(rad)} x2={nx-nr*Math.cos(rad)} y2={ny-nr*Math.sin(rad)} stroke={C} strokeWidth="1.5" strokeOpacity=".3"/>
+          <circle cx={nx} cy={ny} r={nr} fill="#E8F5F1" stroke={C} strokeWidth="1" strokeOpacity=".25"/>
+          {n.l.map((line,li)=>(
+            <text key={li} x={nx} y={ny+off+li*lh} textAnchor="middle" fill={C} fontSize="8.5" fontWeight="700" fontFamily="Arial,sans-serif">{line}</text>
+          ))}
+        </g>);
+      })}
+      <circle cx={cx} cy={cy} r={46} fill={C}/>
+      <text x={cx} y={cy-10} textAnchor="middle" fill="#fff" fontSize="8" fontWeight="700" fontFamily="Arial,sans-serif">SHARED</text>
+      <text x={cx} y={cy+2} textAnchor="middle" fill="#fff" fontSize="8" fontWeight="700" fontFamily="Arial,sans-serif">CONSCIOUSNESS</text>
+      <text x={cx} y={cy+16} textAnchor="middle" fill="rgba(255,255,255,.55)" fontSize="7" fontFamily="Arial,sans-serif">Continuous Learning</text>
+      <text x={cx} y={cy+27} textAnchor="middle" fill="rgba(255,255,255,.55)" fontSize="7" fontFamily="Arial,sans-serif">Culture</text>
+    </svg>
+  );
+}
+
+function TeamsView(){
+  const [active,setActive]=React.useState("safety");
+  const teams=[
+    {k:"safety",l:"Safety & Security",c:"#1E3A52"},
+    {k:"hr",l:"Human Resources",c:B.carmine},
+    {k:"ld",l:"Learning & Development",c:"#005844"},
+  ];
+  const info={
+    safety:{fig:"Figure 1",title:"Safety & Security Ecosystem",lead:"Paula Eyzaguirre · Manager, Global Safety & Security",desc:"The Safety & Security function governs NI's duty of care framework, ensuring staff operate safely across 60+ countries through six interconnected areas of operational security.",purview:["Governance: Global policy, risk thresholds & accountability framework","Crisis Management: CMT, procedures & After-Action Reviews","Resources: Funding, staffing, travel coordination & memberships","Learning: PSS, HEAT, First Aid, fire safety & driver training","Operational Security (OpSec): SRAs, SMPs, SOPs & ISOS integration","Communication: Procedures, equipment provision & information security"]},
+    hr:{fig:"Figure 2",title:"The Employee Life Cycle",lead:"Grant Carioni · Sr. Director, People & Culture",desc:"HR operations are anchored in the Employee Experience concept — ensuring engagement, accountability, and compliance across every stage of the staff journey from recruitment to exit.",purview:["Recruitment & selection: From hiring intake through reference & background checks","Contract management: Offers, extensions and exits","Cyclical initiatives: Awards programs, compensation planning, reporting cycles","Employee engagement: Survey development, analysis & action planning","Health & safety: Inspections, regulatory compliance & meetings","Absence management: Annual, sick, parental & LTD leave","Employee relations: Conflict management & organizational change support"]},
+    ld:{fig:"Figure 3",title:"Continuous Learning Culture",lead:"Arif Pyarali · Manager, Global Learning & Development",desc:"L&D builds NI's capacity for sustained excellence by fostering a continuous learning culture anchored in shared consciousness — upskilling and retooling staff in alignment with values and IC2 priorities.",purview:["Compliance training & mandatory certification programs","Leadership development: MDP, SLII & executive coaching","Mentoring & action learning opportunities","Technical & behavioural skill development pathways","Knowledge management systems & IC2 e-learning modules","Linking learning outcomes directly to performance & IC2 strategy"]},
+  };
+  const t=info[active],ac=teams.find(x=>x.k===active)?.c||B.charcoal;
+  return(
+    <div className="fade-up" style={{paddingBottom:40}}>
+      <div style={{background:B.charcoal,borderRadius:12,padding:"24px 28px",marginBottom:20,color:"#fff"}}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(255,255,255,.4)",marginBottom:5}}>People & Culture</div>
+        <div style={{fontSize:22,fontWeight:700,marginBottom:6}}>How Our Teams Operate</div>
+        <div style={{fontSize:12,color:"rgba(255,255,255,.6)",lineHeight:1.6,maxWidth:540}}>
+          Three specialist teams form the People & Culture function, each operating a distinct service model to deliver NI's 2025–2031 People Strategy.
+        </div>
+      </div>
+      <div style={{display:"flex",gap:8,marginBottom:20}}>
+        {teams.map(tm=>(
+          <button key={tm.k} onClick={()=>setActive(tm.k)} style={{flex:1,padding:"10px 14px",borderRadius:8,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,fontFamily:"Arial,sans-serif",transition:"all .2s",background:active===tm.k?tm.c:"#F2F0EB",color:active===tm.k?"#fff":B.charcoal}}>
+            {tm.l}
+          </button>
+        ))}
+      </div>
+      <div style={{background:"#fff",borderRadius:12,border:`1.5px solid ${ac}25`,overflow:"hidden"}}>
+        <div style={{background:ac,padding:"16px 24px",color:"#fff"}}>
+          <div style={{fontSize:9,fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",opacity:.55,marginBottom:4}}>{t.fig} · Operational Model</div>
+          <div style={{fontSize:18,fontWeight:700}}>{t.title}</div>
+          <div style={{fontSize:11,opacity:.7,marginTop:3}}>{t.lead}</div>
+        </div>
+        <div style={{padding:"20px 24px"}}>
+          <p style={{margin:"0 0 14px",fontSize:13,color:B.charcoal,lineHeight:1.65}}>{t.desc}</p>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"5px 16px",marginBottom:20}}>
+            {t.purview.map((p,i)=>(
+              <div key={i} style={{fontSize:11.5,color:B.charcoal,lineHeight:1.5,display:"flex",gap:7,alignItems:"flex-start"}}>
+                <span style={{color:ac,fontWeight:700,flexShrink:0,lineHeight:1.5}}>›</span>
+                <span>{p}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{borderTop:`1px solid ${ac}20`,paddingTop:18}}>
+            <div style={{fontSize:10,fontWeight:700,letterSpacing:".08em",textTransform:"uppercase",color:"#6B7C8A",marginBottom:12}}>{t.fig} — {t.title}</div>
+            {active==="safety"&&<SafetyEcosystem/>}
+            {active==="hr"&&<HRLifeCycle/>}
+            {active==="ld"&&<LDCulture/>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── MAIN APP ──
 export default function App(){
   const[active,setActive]=useState(0);
@@ -1196,7 +1354,7 @@ export default function App(){
       {/* NAV */}
       <div style={{maxWidth:920,margin:"0 auto",padding:"0 24px"}}>
         <div style={{display:"flex",gap:0,marginTop:20,marginBottom:20,borderBottom:`2px solid ${B.g2}`,alignItems:"center"}}>
-          {[{k:"pillars",l:"Goal Pillars"},{k:"alignment",l:"IC2 Alignment"},{k:"survey",l:"Team Survey"}].map(v=>(
+          {[{k:"pillars",l:"Goal Pillars"},{k:"alignment",l:"IC2 Alignment"},{k:"survey",l:"Team Survey"},{k:"teams",l:"Our Teams"}].map(v=>(
             <button key={v.k} onClick={()=>setView(v.k)} style={{padding:"10px 18px",border:"none",borderBottom:view===v.k?`3px solid ${B.carmine}`:"3px solid transparent",background:"transparent",fontSize:12,fontWeight:view===v.k?700:500,color:view===v.k?B.carmine:B.g4,cursor:"pointer",marginBottom:-2,transition:"all .2s"}}>{v.l}</button>
           ))}
           <div style={{flex:1}}/>
@@ -1244,6 +1402,8 @@ export default function App(){
               </table>
             </div>
           </div>
+        ):view==="teams"?(
+          <TeamsView/>
         ):view==="survey"?(
           <SurveyView appData={data} setAppData={setData} userName={data?.userName||""} isAdmin={isAdminActive}/>
         ):(
