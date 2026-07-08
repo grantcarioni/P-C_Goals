@@ -1127,7 +1127,7 @@ function LDCulture(){
 }
 
 function TeamsView(){
-  const [active,setActive]=React.useState("safety");
+  const [active,setActive]=useState("safety");
   const teams=[
     {k:"safety",l:"Safety & Security",c:"#1E3A52"},
     {k:"hr",l:"Human Resources",c:B.carmine},
