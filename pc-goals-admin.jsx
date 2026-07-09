@@ -521,6 +521,31 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
   });
   const shown=filterTheme==="all"?actions:actions.filter(a=>a.theme===filterTheme);
 
+  // Photo upload
+  const photoInputRef=useRef(null);
+  const [uploadingId,setUploadingId]=useState(null);
+  const [lightboxPhoto,setLightboxPhoto]=useState(null);
+  const triggerPhotoUpload=(id)=>{setUploadingId(id);photoInputRef.current.value="";photoInputRef.current.click();};
+  const handlePhotoFile=(e)=>{
+    const file=e.target.files[0];if(!file||!uploadingId)return;
+    const reader=new FileReader();
+    reader.onload=(ev)=>{
+      const img=new Image();
+      img.onload=()=>{
+        const canvas=document.createElement("canvas");
+        const maxW=800,ratio=Math.min(1,maxW/img.width);
+        canvas.width=Math.round(img.width*ratio);canvas.height=Math.round(img.height*ratio);
+        canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+        const dataUrl=canvas.toDataURL("image/jpeg",0.78);
+        update(n=>{n.surveyActions=actions.map(a=>a.id===uploadingId?{...a,photo:dataUrl}:a);});
+        setUploadingId(null);
+      };
+      img.src=ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  const removePhoto=(id)=>update(n=>{n.surveyActions=actions.map(a=>a.id===id?{...a,photo:null}:a);});
+
   // Trend chart geometry
   const W=440,H=136,PL=52,PR=18,PT=22,PB=24;
   const gW=W-PL-PR,gH=H-PT-PB;
@@ -538,7 +563,7 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
   const bgW=BW-BPL-BPR;
   const rowH=Math.floor((BH-BPT*2)/SURVEY_DATA.questions.length);
 
-  return(
+  return(<>
     <div className="fade-up" style={{display:"flex",flexDirection:"column",gap:16}}>
 
       {/* ── Hero header ── */}
@@ -802,9 +827,40 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
                     <span style={{fontSize:11,color:B.g3,marginLeft:"auto"}}>{a.author} · {a.date}</span>
                   </div>
                 </div>
+                {/* Photo thumbnail / upload */}
+                <div style={{flexShrink:0,position:"relative",alignSelf:"center"}}>
+                  {a.photo?(
+                    <div style={{position:"relative",display:"inline-block"}}>
+                      <img src={a.photo} alt="achievement" onClick={()=>setLightboxPhoto(a.photo)}
+                        style={{width:72,height:72,objectFit:"cover",borderRadius:8,border:`2px solid ${B.g2}`,cursor:"pointer",display:"block",transition:"opacity .15s"}}/>
+                      {canEdit&&(
+                        <div style={{position:"absolute",inset:0,borderRadius:8,background:"rgba(0,0,0,0)",display:"flex",gap:3,alignItems:"center",justifyContent:"center",opacity:0,transition:"all .15s"}}
+                          onMouseEnter={e=>{e.currentTarget.style.background="rgba(0,0,0,.45)";e.currentTarget.style.opacity="1";}}
+                          onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,0,0,0)";e.currentTarget.style.opacity="0";}}>
+                          <button onClick={()=>triggerPhotoUpload(a.id)} title="Replace photo"
+                            style={{background:"rgba(255,255,255,.85)",border:"none",borderRadius:5,padding:"3px 5px",cursor:"pointer",lineHeight:0}}>
+                            <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke={B.charcoal} strokeWidth="2" strokeLinecap="round"><path d="M4 13v3h3l8-8-3-3-8 8z"/><path d="M14.5 4.5l1 1"/></svg>
+                          </button>
+                          <button onClick={()=>removePhoto(a.id)} title="Remove photo"
+                            style={{background:"rgba(255,255,255,.85)",border:"none",borderRadius:5,padding:"3px 5px",cursor:"pointer",lineHeight:0}}>
+                            <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke={B.carmine} strokeWidth="2" strokeLinecap="round"><line x1="4" y1="4" x2="16" y2="16"/><line x1="16" y1="4" x2="4" y2="16"/></svg>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ):canEdit?(
+                    <button onClick={()=>triggerPhotoUpload(a.id)} title="Add achievement photo"
+                      style={{width:72,height:72,borderRadius:8,border:`1.5px dashed ${B.g2}`,background:"transparent",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,color:B.g3,transition:"all .15s",padding:0}}
+                      onMouseEnter={e=>{e.currentTarget.style.borderColor=B.carmine;e.currentTarget.style.color=B.carmine;e.currentTarget.style.background=B.carmine+"0a";}}
+                      onMouseLeave={e=>{e.currentTarget.style.borderColor=B.g2;e.currentTarget.style.color=B.g3;e.currentTarget.style.background="transparent";}}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                      <span style={{fontSize:9,fontWeight:600,letterSpacing:".03em",lineHeight:1.2,textAlign:"center"}}>Add<br/>photo</span>
+                    </button>
+                  ):null}
+                </div>
                 {isAdmin&&(
                   <button onClick={()=>deleteAction(a.id)} title="Delete"
-                    style={{padding:4,background:"transparent",border:"none",cursor:"pointer",color:B.g3,flexShrink:0,lineHeight:0}}>
+                    style={{padding:4,background:"transparent",border:"none",cursor:"pointer",color:B.g3,flexShrink:0,lineHeight:0,alignSelf:"flex-start",marginTop:2}}>
                     <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="4" x2="16" y2="16"/><line x1="16" y1="4" x2="4" y2="16"/></svg>
                   </button>
                 )}
@@ -824,7 +880,20 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
         )}
       </div>
     </div>
-  );
+
+    {/* Hidden file input for photo upload */}
+    <input ref={photoInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhotoFile}/>
+
+    {/* Lightbox */}
+    {lightboxPhoto&&(
+      <div onClick={()=>setLightboxPhoto(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.75)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",cursor:"zoom-out"}}>
+        <img src={lightboxPhoto} alt="achievement" style={{maxWidth:"90vw",maxHeight:"90vh",borderRadius:10,boxShadow:"0 8px 40px rgba(0,0,0,.5)",objectFit:"contain"}}/>
+        <button onClick={()=>setLightboxPhoto(null)} style={{position:"absolute",top:20,right:24,background:"rgba(255,255,255,.15)",border:"none",borderRadius:"50%",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff"}}>
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="4" y1="4" x2="16" y2="16"/><line x1="16" y1="4" x2="4" y2="16"/></svg>
+        </button>
+      </div>
+    )}
+  </>);
 }
 
 // ── ADMIN PANEL ──
