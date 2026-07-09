@@ -505,6 +505,18 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
   const[actionOwner,setActionOwner]=useState("");
   const[filterTheme,setFilterTheme]=useState("all");
 
+  // Edit state
+  const[editingId,setEditingId]=useState(null);
+  const[editText,setEditText]=useState("");
+  const[editTheme,setEditTheme]=useState("collaboration");
+  const[editOwner,setEditOwner]=useState("");
+
+  // Attachment state
+  const[attachingId,setAttachingId]=useState(null);
+  const[urlInput,setUrlInput]=useState("");
+  const docInputRef=useRef(null);
+  const[docAttachId,setDocAttachId]=useState(null);
+
   const actions=appData?.surveyActions||[];
   const update=(fn)=>{const next={...appData};fn(next);setAppData(next);save(next);};
   const addAction=()=>{
@@ -519,6 +531,35 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
     const order=["todo","inprogress","done"];
     n.surveyActions=actions.map(a=>{if(a.id!==id)return a;const idx=order.indexOf(a.status);return{...a,status:order[(idx+1)%3]};});
   });
+
+  // Edit helpers
+  const startEdit=(a)=>{setEditingId(a.id);setEditText(a.text);setEditTheme(a.theme||"collaboration");setEditOwner(a.owner||"");};
+  const saveEdit=()=>{
+    if(!editText.trim())return;
+    update(n=>{n.surveyActions=actions.map(a=>a.id===editingId?{...a,text:editText.trim(),theme:editTheme,owner:editOwner.trim()}:a);});
+    setEditingId(null);
+  };
+
+  // Attachment helpers
+  const addUrlAttachment=(id)=>{
+    const url=urlInput.trim();if(!url)return;
+    let label=url;try{label=new URL(url).hostname;}catch(_){}
+    update(n=>{n.surveyActions=actions.map(a=>a.id===id?{...a,attachments:[...(a.attachments||[]),{type:"url",url,label}]}:a);});
+    setUrlInput("");setAttachingId(null);
+  };
+  const handleDocFile=(e)=>{
+    const file=e.target.files[0];if(!file||!docAttachId)return;
+    if(file.size>2*1024*1024){alert("File too large — maximum 2 MB.");return;}
+    const reader=new FileReader();
+    reader.onload=(ev)=>{
+      update(n=>{n.surveyActions=actions.map(a=>a.id===docAttachId?{...a,attachments:[...(a.attachments||[]),{type:"file",name:file.name,mime:file.type,dataUrl:ev.target.result}]}:a);});
+      setDocAttachId(null);setAttachingId(null);
+    };
+    reader.readAsDataURL(file);
+  };
+  const removeAttachment=(actionId,idx)=>update(n=>{n.surveyActions=actions.map(a=>a.id===actionId?{...a,attachments:(a.attachments||[]).filter((_,i)=>i!==idx)}:a);});
+  const triggerDocUpload=(id)=>{setDocAttachId(id);docInputRef.current.value="";docInputRef.current.click();};
+
   const shown=filterTheme==="all"?actions:actions.filter(a=>a.theme===filterTheme);
 
   // Photo upload
@@ -813,56 +854,148 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
             const sm=STATUS_META[a.status]||STATUS_META.todo;
             const canEdit=isAdmin||a.author===userName;
             return(
-              <div key={a.id} style={{padding:"13px 22px",borderBottom:i<shown.length-1?`1px solid ${B.g2}`:"none",display:"flex",gap:12,alignItems:"flex-start"}}>
-                <button onClick={()=>canEdit&&cycleStatus(a.id)} title={canEdit?"Advance status":sm.label}
-                  style={{marginTop:3,width:18,height:18,borderRadius:"50%",border:`2px solid ${sm.color}`,background:a.status==="done"?sm.color:"transparent",cursor:canEdit?"pointer":"default",flexShrink:0,transition:"all .2s",padding:0}}>
-                  {a.status==="done"&&<svg viewBox="0 0 10 10" width="10" height="10" style={{display:"block",margin:"auto"}}><polyline points="2,5 4.5,7.5 8,3" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>}
-                </button>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,color:a.status==="done"?B.g3:B.charcoal,textDecoration:a.status==="done"?"line-through":"none",lineHeight:1.4,marginBottom:5}}>{a.text}</div>
-                  <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
-                    <span style={{padding:"2px 8px",borderRadius:12,background:tm.color+"18",color:tm.color,fontSize:10.5,fontWeight:600}}>{tm.label}</span>
-                    <span style={{padding:"2px 8px",borderRadius:12,background:sm.bg,color:sm.color,fontSize:10.5,fontWeight:600,cursor:canEdit?"pointer":"default"}} onClick={()=>canEdit&&cycleStatus(a.id)}>{sm.label}</span>
-                    {a.owner&&<span style={{fontSize:11,color:B.g4}}>Owner: <b>{a.owner}</b></span>}
-                    <span style={{fontSize:11,color:B.g3,marginLeft:"auto"}}>{a.author} · {a.date}</span>
-                  </div>
-                </div>
-                {/* Photo thumbnail / upload */}
-                <div style={{flexShrink:0,position:"relative",alignSelf:"center"}}>
-                  {a.photo?(
-                    <div style={{position:"relative",display:"inline-block"}}>
-                      <img src={a.photo} alt="achievement" onClick={()=>setLightboxPhoto(a.photo)}
-                        style={{width:72,height:72,objectFit:"cover",borderRadius:8,border:`2px solid ${B.g2}`,cursor:"pointer",display:"block",transition:"opacity .15s"}}/>
-                      {canEdit&&(
-                        <div style={{position:"absolute",inset:0,borderRadius:8,background:"rgba(0,0,0,0)",display:"flex",gap:3,alignItems:"center",justifyContent:"center",opacity:0,transition:"all .15s"}}
-                          onMouseEnter={e=>{e.currentTarget.style.background="rgba(0,0,0,.45)";e.currentTarget.style.opacity="1";}}
-                          onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,0,0,0)";e.currentTarget.style.opacity="0";}}>
-                          <button onClick={()=>triggerPhotoUpload(a.id)} title="Replace photo"
-                            style={{background:"rgba(255,255,255,.85)",border:"none",borderRadius:5,padding:"3px 5px",cursor:"pointer",lineHeight:0}}>
-                            <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke={B.charcoal} strokeWidth="2" strokeLinecap="round"><path d="M4 13v3h3l8-8-3-3-8 8z"/><path d="M14.5 4.5l1 1"/></svg>
-                          </button>
-                          <button onClick={()=>removePhoto(a.id)} title="Remove photo"
-                            style={{background:"rgba(255,255,255,.85)",border:"none",borderRadius:5,padding:"3px 5px",cursor:"pointer",lineHeight:0}}>
-                            <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke={B.carmine} strokeWidth="2" strokeLinecap="round"><line x1="4" y1="4" x2="16" y2="16"/><line x1="16" y1="4" x2="4" y2="16"/></svg>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ):canEdit?(
-                    <button onClick={()=>triggerPhotoUpload(a.id)} title="Add achievement photo"
-                      style={{width:72,height:72,borderRadius:8,border:`1.5px dashed ${B.g2}`,background:"transparent",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,color:B.g3,transition:"all .15s",padding:0}}
-                      onMouseEnter={e=>{e.currentTarget.style.borderColor=B.carmine;e.currentTarget.style.color=B.carmine;e.currentTarget.style.background=B.carmine+"0a";}}
-                      onMouseLeave={e=>{e.currentTarget.style.borderColor=B.g2;e.currentTarget.style.color=B.g3;e.currentTarget.style.background="transparent";}}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                      <span style={{fontSize:9,fontWeight:600,letterSpacing:".03em",lineHeight:1.2,textAlign:"center"}}>Add<br/>photo</span>
-                    </button>
-                  ):null}
-                </div>
-                {isAdmin&&(
-                  <button onClick={()=>deleteAction(a.id)} title="Delete"
-                    style={{padding:4,background:"transparent",border:"none",cursor:"pointer",color:B.g3,flexShrink:0,lineHeight:0,alignSelf:"flex-start",marginTop:2}}>
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="4" x2="16" y2="16"/><line x1="16" y1="4" x2="4" y2="16"/></svg>
+              <div key={a.id} style={{borderBottom:i<shown.length-1?`1px solid ${B.g2}`:"none"}}>
+                {/* ── Main row ── */}
+                <div style={{padding:"13px 22px",display:"flex",gap:12,alignItems:"flex-start"}}>
+                  <button onClick={()=>canEdit&&cycleStatus(a.id)} title={canEdit?"Advance status":sm.label}
+                    style={{marginTop:editingId===a.id?10:3,width:18,height:18,borderRadius:"50%",border:`2px solid ${sm.color}`,background:a.status==="done"?sm.color:"transparent",cursor:canEdit?"pointer":"default",flexShrink:0,transition:"all .2s",padding:0}}>
+                    {a.status==="done"&&<svg viewBox="0 0 10 10" width="10" height="10" style={{display:"block",margin:"auto"}}><polyline points="2,5 4.5,7.5 8,3" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>}
                   </button>
+
+                  {/* ── Text area: edit form or read view ── */}
+                  <div style={{flex:1,minWidth:0}}>
+                    {editingId===a.id?(
+                      <div>
+                        <textarea value={editText} onChange={e=>setEditText(e.target.value)} rows={2} autoFocus
+                          style={{width:"100%",padding:"8px 10px",fontSize:13,border:`1.5px solid ${B.carmine}`,borderRadius:7,resize:"vertical",fontFamily:"Arial,sans-serif",outline:"none",color:B.charcoal,background:"#fff",boxSizing:"border-box"}}/>
+                        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:6,alignItems:"center"}}>
+                          <select value={editTheme} onChange={e=>setEditTheme(e.target.value)}
+                            style={{padding:"5px 8px",fontSize:11,border:`1px solid ${B.g2}`,borderRadius:6,color:B.charcoal,background:"#fff",flex:"1 1 130px"}}>
+                            {SURVEY_THEMES.map(t=><option key={t.key} value={t.key}>{t.label}</option>)}
+                          </select>
+                          <input value={editOwner} onChange={e=>setEditOwner(e.target.value)} placeholder="Owner (optional)"
+                            style={{padding:"5px 8px",fontSize:11,border:`1px solid ${B.g2}`,borderRadius:6,color:B.charcoal,flex:"1 1 130px",outline:"none"}}/>
+                          <button onClick={saveEdit} disabled={!editText.trim()}
+                            style={{padding:"5px 14px",background:B.carmine,color:"#fff",border:"none",borderRadius:6,fontSize:12,fontWeight:600,cursor:editText.trim()?"pointer":"not-allowed",opacity:editText.trim()?1:.5}}>Save</button>
+                          <button onClick={()=>setEditingId(null)}
+                            style={{padding:"5px 10px",background:"transparent",color:B.g4,border:`1px solid ${B.g2}`,borderRadius:6,fontSize:12,cursor:"pointer"}}>Cancel</button>
+                        </div>
+                      </div>
+                    ):(
+                      <>
+                        <div style={{fontSize:13,color:a.status==="done"?B.g3:B.charcoal,textDecoration:a.status==="done"?"line-through":"none",lineHeight:1.4,marginBottom:5}}>{a.text}</div>
+                        <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
+                          <span style={{padding:"2px 8px",borderRadius:12,background:tm.color+"18",color:tm.color,fontSize:10.5,fontWeight:600}}>{tm.label}</span>
+                          <span style={{padding:"2px 8px",borderRadius:12,background:sm.bg,color:sm.color,fontSize:10.5,fontWeight:600,cursor:canEdit?"pointer":"default"}} onClick={()=>canEdit&&cycleStatus(a.id)}>{sm.label}</span>
+                          {a.owner&&<span style={{fontSize:11,color:B.g4}}>Owner: <b>{a.owner}</b></span>}
+                          <span style={{fontSize:11,color:B.g3,marginLeft:"auto"}}>{a.author} · {a.date}</span>
+                          {canEdit&&<>
+                            <button onClick={()=>startEdit(a)} title="Edit action"
+                              style={{padding:3,background:"transparent",border:"none",cursor:"pointer",color:B.g3,lineHeight:0}}
+                              onMouseEnter={e=>e.currentTarget.style.color=B.charcoal} onMouseLeave={e=>e.currentTarget.style.color=B.g3}>
+                              <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 13v3h3l8-8-3-3-8 8z"/><path d="M14.5 4.5l1 1"/></svg>
+                            </button>
+                            <button onClick={()=>setAttachingId(attachingId===a.id?null:a.id)} title="Add attachment"
+                              style={{padding:3,background:"transparent",border:"none",cursor:"pointer",color:attachingId===a.id?B.carmine:B.g3,lineHeight:0}}
+                              onMouseEnter={e=>e.currentTarget.style.color=B.carmine} onMouseLeave={e=>e.currentTarget.style.color=attachingId===a.id?B.carmine:B.g3}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+                            </button>
+                          </>}
+                        </div>
+                        {/* Attachment chips */}
+                        {(a.attachments||[]).length>0&&(
+                          <div style={{display:"flex",gap:5,flexWrap:"wrap",marginTop:7}}>
+                            {(a.attachments||[]).map((att,idx)=>{
+                              const isPdf=att.mime==="application/pdf"||att.name?.endsWith(".pdf");
+                              const isXls=att.mime?.includes("spreadsheet")||att.name?.match(/\.xlsx?$/i);
+                              const icon=att.type==="url"?"🔗":isPdf?"📄":isXls?"📊":"📎";
+                              const label=att.type==="url"?att.label:att.name;
+                              return(
+                                <div key={idx} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",borderRadius:20,background:B.g1,border:`1px solid ${B.g2}`,fontSize:11,maxWidth:220}}>
+                                  <span>{icon}</span>
+                                  {att.type==="url"?(
+                                    <a href={att.url} target="_blank" rel="noreferrer" style={{color:B.charcoal,textDecoration:"none",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{label}</a>
+                                  ):(
+                                    <a href={att.dataUrl} download={att.name} style={{color:B.charcoal,textDecoration:"none",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{label}</a>
+                                  )}
+                                  {canEdit&&<button onClick={()=>removeAttachment(a.id,idx)}
+                                    style={{padding:0,background:"transparent",border:"none",cursor:"pointer",color:B.g3,lineHeight:0,flexShrink:0,marginLeft:2}}
+                                    onMouseEnter={e=>e.currentTarget.style.color=B.carmine} onMouseLeave={e=>e.currentTarget.style.color=B.g3}>
+                                    <svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="4" y1="4" x2="16" y2="16"/><line x1="16" y1="4" x2="4" y2="16"/></svg>
+                                  </button>}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Photo thumbnail / upload */}
+                  {editingId!==a.id&&(
+                    <div style={{flexShrink:0,position:"relative",alignSelf:"center"}}>
+                      {a.photo?(
+                        <div style={{position:"relative",display:"inline-block"}}>
+                          <img src={a.photo} alt="achievement" onClick={()=>setLightboxPhoto(a.photo)}
+                            style={{width:72,height:72,objectFit:"cover",borderRadius:8,border:`2px solid ${B.g2}`,cursor:"pointer",display:"block"}}/>
+                          {canEdit&&(
+                            <div style={{position:"absolute",inset:0,borderRadius:8,background:"rgba(0,0,0,0)",display:"flex",gap:3,alignItems:"center",justifyContent:"center",opacity:0,transition:"all .15s"}}
+                              onMouseEnter={e=>{e.currentTarget.style.background="rgba(0,0,0,.45)";e.currentTarget.style.opacity="1";}}
+                              onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,0,0,0)";e.currentTarget.style.opacity="0";}}>
+                              <button onClick={e=>{e.stopPropagation();triggerPhotoUpload(a.id);}} title="Replace photo"
+                                style={{background:"rgba(255,255,255,.85)",border:"none",borderRadius:5,padding:"3px 5px",cursor:"pointer",lineHeight:0}}>
+                                <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke={B.charcoal} strokeWidth="2" strokeLinecap="round"><path d="M4 13v3h3l8-8-3-3-8 8z"/><path d="M14.5 4.5l1 1"/></svg>
+                              </button>
+                              <button onClick={e=>{e.stopPropagation();removePhoto(a.id);}} title="Remove photo"
+                                style={{background:"rgba(255,255,255,.85)",border:"none",borderRadius:5,padding:"3px 5px",cursor:"pointer",lineHeight:0}}>
+                                <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke={B.carmine} strokeWidth="2" strokeLinecap="round"><line x1="4" y1="4" x2="16" y2="16"/><line x1="16" y1="4" x2="4" y2="16"/></svg>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ):canEdit?(
+                        <button onClick={()=>triggerPhotoUpload(a.id)} title="Add achievement photo"
+                          style={{width:72,height:72,borderRadius:8,border:`1.5px dashed ${B.g2}`,background:"transparent",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,color:B.g3,transition:"all .15s",padding:0}}
+                          onMouseEnter={e=>{e.currentTarget.style.borderColor=B.carmine;e.currentTarget.style.color=B.carmine;e.currentTarget.style.background=B.carmine+"0a";}}
+                          onMouseLeave={e=>{e.currentTarget.style.borderColor=B.g2;e.currentTarget.style.color=B.g3;e.currentTarget.style.background="transparent";}}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                          <span style={{fontSize:9,fontWeight:600,letterSpacing:".03em",lineHeight:1.2,textAlign:"center"}}>Add<br/>photo</span>
+                        </button>
+                      ):null}
+                    </div>
+                  )}
+
+                  {canEdit&&(
+                    <button onClick={()=>deleteAction(a.id)} title="Delete action"
+                      style={{padding:4,background:"transparent",border:"none",cursor:"pointer",color:B.g3,flexShrink:0,lineHeight:0,alignSelf:"flex-start",marginTop:2}}
+                      onMouseEnter={e=>e.currentTarget.style.color=B.carmine} onMouseLeave={e=>e.currentTarget.style.color=B.g3}>
+                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="4" x2="16" y2="16"/><line x1="16" y1="4" x2="4" y2="16"/></svg>
+                    </button>
+                  )}
+                </div>
+
+                {/* ── Attachment panel ── */}
+                {attachingId===a.id&&(
+                  <div style={{margin:"0 22px 12px",padding:"12px 14px",background:B.cream,borderRadius:8,border:`1px solid ${B.g2}`}}>
+                    <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:B.g4,marginBottom:8}}>Add attachment</div>
+                    <div style={{display:"flex",gap:6,marginBottom:8,alignItems:"center"}}>
+                      <input value={urlInput} onChange={e=>setUrlInput(e.target.value)} placeholder="Paste a URL (SharePoint, OneDrive, web link…)"
+                        onKeyDown={e=>e.key==="Enter"&&addUrlAttachment(a.id)}
+                        style={{flex:1,padding:"7px 10px",fontSize:12,border:`1px solid ${B.g2}`,borderRadius:6,outline:"none",color:B.charcoal}}/>
+                      <button onClick={()=>addUrlAttachment(a.id)} disabled={!urlInput.trim()}
+                        style={{padding:"7px 14px",background:B.charcoal,color:"#fff",border:"none",borderRadius:6,fontSize:12,fontWeight:600,cursor:urlInput.trim()?"pointer":"not-allowed",opacity:urlInput.trim()?1:.45,whiteSpace:"nowrap"}}>Add link</button>
+                    </div>
+                    <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                      <button onClick={()=>triggerDocUpload(a.id)}
+                        style={{display:"flex",alignItems:"center",gap:6,padding:"7px 14px",background:"#fff",border:`1px solid ${B.g2}`,borderRadius:6,fontSize:12,color:B.charcoal,cursor:"pointer",fontWeight:500}}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Upload PDF / XLS
+                      </button>
+                      <span style={{fontSize:11,color:B.g3}}>Max 2 MB</span>
+                      <button onClick={()=>setAttachingId(null)} style={{marginLeft:"auto",padding:"7px 12px",background:"transparent",border:`1px solid ${B.g2}`,borderRadius:6,fontSize:12,color:B.g4,cursor:"pointer"}}>Cancel</button>
+                    </div>
+                  </div>
                 )}
               </div>
             );
@@ -881,14 +1014,18 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
       </div>
     </div>
 
-    {/* Hidden file input for photo upload */}
+    {/* Hidden inputs */}
     <input ref={photoInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhotoFile}/>
+    <input ref={docInputRef} type="file" accept=".pdf,.xls,.xlsx,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style={{display:"none"}} onChange={handleDocFile}/>
 
-    {/* Lightbox */}
+    {/* Lightbox — click backdrop to close, image click is neutral */}
     {lightboxPhoto&&(
-      <div onClick={()=>setLightboxPhoto(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.75)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",cursor:"zoom-out"}}>
-        <img src={lightboxPhoto} alt="achievement" style={{maxWidth:"90vw",maxHeight:"90vh",borderRadius:10,boxShadow:"0 8px 40px rgba(0,0,0,.5)",objectFit:"contain"}}/>
-        <button onClick={()=>setLightboxPhoto(null)} style={{position:"absolute",top:20,right:24,background:"rgba(255,255,255,.15)",border:"none",borderRadius:"50%",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff"}}>
+      <div onClick={()=>setLightboxPhoto(null)}
+        style={{position:"fixed",inset:0,background:"rgba(0,0,0,.82)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:24,boxSizing:"border-box"}}>
+        <img src={lightboxPhoto} alt="achievement" onClick={e=>e.stopPropagation()}
+          style={{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",borderRadius:10,boxShadow:"0 12px 60px rgba(0,0,0,.6)",objectFit:"contain",display:"block"}}/>
+        <button onClick={()=>setLightboxPhoto(null)}
+          style={{position:"absolute",top:16,right:16,background:"rgba(255,255,255,.18)",border:"1px solid rgba(255,255,255,.25)",borderRadius:"50%",width:38,height:38,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",backdropFilter:"blur(4px)"}}>
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="4" y1="4" x2="16" y2="16"/><line x1="16" y1="4" x2="4" y2="16"/></svg>
         </button>
       </div>
