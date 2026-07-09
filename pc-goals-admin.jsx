@@ -560,6 +560,23 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
   const removeAttachment=(actionId,idx)=>update(n=>{n.surveyActions=actions.map(a=>a.id===actionId?{...a,attachments:(a.attachments||[]).filter((_,i)=>i!==idx)}:a);});
   const triggerDocUpload=(id)=>{setDocAttachId(id);docInputRef.current.value="";docInputRef.current.click();};
 
+  // Reaction helpers
+  const toggleReaction=(actionId,type)=>{
+    if(!userName)return;
+    const other=type==="thumbsUp"?"thumbsDown":"thumbsUp";
+    update(n=>{n.surveyActions=actions.map(a=>{
+      if(a.id!==actionId)return a;
+      const r=a.reactions||{thumbsUp:[],thumbsDown:[]};
+      const list=r[type]||[];
+      const hasThis=list.includes(userName);
+      return{...a,reactions:{
+        ...r,
+        [type]:hasThis?list.filter(u=>u!==userName):[...list,userName],
+        [other]:(r[other]||[]).filter(u=>u!==userName),
+      }};
+    });});
+  };
+
   const shown=filterTheme==="all"?actions:actions.filter(a=>a.theme===filterTheme);
 
   // Photo upload
@@ -888,6 +905,19 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
                           <span style={{padding:"2px 8px",borderRadius:12,background:tm.color+"18",color:tm.color,fontSize:10.5,fontWeight:600}}>{tm.label}</span>
                           <span style={{padding:"2px 8px",borderRadius:12,background:sm.bg,color:sm.color,fontSize:10.5,fontWeight:600,cursor:canEdit?"pointer":"default"}} onClick={()=>canEdit&&cycleStatus(a.id)}>{sm.label}</span>
                           {a.owner&&<span style={{fontSize:11,color:B.g4}}>Owner: <b>{a.owner}</b></span>}
+                          {/* Reactions */}
+                          {[{type:"thumbsUp",emoji:"👍"},{type:"thumbsDown",emoji:"👎"}].map(({type,emoji})=>{
+                            const voters=(a.reactions||{})[type]||[];
+                            const active=userName&&voters.includes(userName);
+                            const disabled=!userName;
+                            return(
+                              <button key={type} onClick={()=>toggleReaction(a.id,type)} disabled={disabled} title={disabled?"Set your name to react":active?`You reacted ${emoji} — click to remove`:`React ${emoji}`}
+                                style={{display:"inline-flex",alignItems:"center",gap:3,padding:"2px 7px",borderRadius:20,border:`1.5px solid ${active?"#d4a800":"#e2ddd6"}`,background:active?"#FFF8DC":"transparent",cursor:disabled?"default":"pointer",fontSize:12,color:active?"#8a6800":B.g3,fontWeight:active?700:400,transition:"all .15s",lineHeight:1}}>
+                                <span style={{fontSize:13,lineHeight:1}}>{emoji}</span>
+                                {voters.length>0&&<span style={{fontSize:11,minWidth:8}}>{voters.length}</span>}
+                              </button>
+                            );
+                          })}
                           <span style={{fontSize:11,color:B.g3,marginLeft:"auto"}}>{a.author} · {a.date}</span>
                           {canEdit&&<>
                             <button onClick={()=>startEdit(a)} title="Edit action"
