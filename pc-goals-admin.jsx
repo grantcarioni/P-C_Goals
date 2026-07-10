@@ -968,7 +968,7 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
                       {a.photo?(
                         <div style={{position:"relative",display:"inline-block"}}>
                           <img src={a.photo} alt="achievement" onClick={()=>setLightboxPhoto(a.photo)}
-                            style={{width:72,height:72,objectFit:"cover",borderRadius:8,border:`2px solid ${B.g2}`,cursor:"pointer",display:"block"}}/>
+                            style={{maxWidth:96,maxHeight:120,width:"auto",height:"auto",objectFit:"contain",borderRadius:8,border:`2px solid ${B.g2}`,cursor:"pointer",display:"block"}}/>
                           {canEdit&&(
                             <div style={{position:"absolute",inset:0,borderRadius:8,background:"rgba(0,0,0,0)",display:"flex",gap:3,alignItems:"center",justifyContent:"center",opacity:0,transition:"all .15s"}}
                               onMouseEnter={e=>{e.currentTarget.style.background="rgba(0,0,0,.45)";e.currentTarget.style.opacity="1";}}
