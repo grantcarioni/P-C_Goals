@@ -447,32 +447,34 @@ function DeliverableCard({goal,pillar,appData,setAppData,userName,index,isAdmin}
   );
 }
 
-// ── SURVEY DATA (Q2 FY27 · P&C Team Engagement Survey) ──
+// ── SURVEY DATA (Q3 FY27 · P&C Team Engagement Survey, HRIS 8–20 Nov 2026, 11/15 responses) ──
+// Q3 FY27 scores are response means; 1–10 rating items (leadership, communication) are halved to the 1–5 scale.
 const SURVEY_DATA={
-  periods:["Q1 FY26","Q2 FY26","Q4 FY26","Q2 FY27"],
-  overall:[4.31,4.01,3.95,4.11],
+  periods:["Q1 FY26","Q2 FY26","Q4 FY26","Q2 FY27","Q3 FY27"],
+  overall:[4.31,4.01,3.95,4.11,4.22],
   questions:[
-    {q:"Engagement with unit activities",     s:[4.5,4.0,3.9,4.1],d:+0.2},
-    {q:"Communication within the unit",       s:[3.9,3.8,3.9,4.0],d:+0.1},
-    {q:"Support from colleagues",             s:[4.6,4.3,4.8,4.3],d:-0.4},
-    {q:"Leadership support & guidance",       s:[4.6,4.2,4.1,4.4],d:+0.3},
-    {q:"Overall work environment",            s:[4.4,3.9,3.9,4.1],d:+0.2},
-    {q:"Professional growth opportunities",   s:[4.1,3.5,3.4,3.6],d:+0.2},
-    {q:"Recognition & appreciation",          s:[4.3,4.3,3.9,4.2],d:+0.3},
-    {q:"Comfort sharing feedback",            s:[4.1,4.1,3.9,4.2],d:+0.4},
+    {q:"Engagement with unit activities",     s:[4.5,4.0,3.9,4.1,4.3],d:+0.2},
+    {q:"Communication within the unit",       s:[3.9,3.8,3.9,4.0,3.9],d:-0.1},
+    {q:"Support from colleagues",             s:[4.6,4.3,4.8,4.3,4.4],d:+0.1},
+    {q:"Leadership support & guidance",       s:[4.6,4.2,4.1,4.4,4.4],d:0},
+    {q:"Overall work environment",            s:[4.4,3.9,3.9,4.1,4.4],d:+0.3},
+    {q:"Professional growth opportunities",   s:[4.1,3.5,3.4,3.6,3.7],d:+0.1},
+    {q:"Recognition & appreciation",          s:[4.3,4.3,3.9,4.2,4.4],d:+0.2},
+    {q:"Comfort sharing feedback",            s:[4.1,4.1,3.9,4.2,4.4],d:+0.2},
   ],
   themes:[
-    {c:"#253746",name:"Collaboration & silos",desc:"Some feel more siloed — want cross-team engagement, monthly knowledge-sharing, and unity across locations"},
-    {c:"#2E75B6",name:"Efficiency",desc:"Automate manual and physical work to be more efficient"},
-    {c:"#B94700",name:"Workload pacing",desc:"Heavy workload concentrated at the start of the year"},
-    {c:"#005844",name:"Feedback & connection",desc:"Want timely feedback; an in-person team meet-up would add value"},
-    {c:"#00A88A",name:"Positive notes",desc:"“Pleasure working for this team”, “awesome team”, “wonderful experience”, “keep up the teamwork”"},
+    {c:"#253746",name:"Visibility of P&C work",desc:"Share short updates on key projects so colleagues see what P&C delivers and the team's work is recognised"},
+    {c:"#2E75B6",name:"Communication & growth",desc:"Improve communication across the P&C unit and create professional growth opportunities for everyone"},
+    {c:"#B94700",name:"More voices in meetings",desc:"Rotate who presents objective updates at Global P&C meetings — many more people contribute to those goals"},
+    {c:"#005844",name:"Connection & learning",desc:"A P&C retreat, and an open session on challenges, failures and lessons learned to lift each other up"},
+    {c:"#6B4C9A",name:"AI tools & training",desc:"Practical training on Claude for analysis, with the same access and features for everyone"},
+    {c:"#00A88A",name:"Positive notes",desc:"“Welcoming and warm engagement in the team”, “very supportive”"},
   ],
   takeaways:[
-    {h:"Engagement recovered in Q2 FY27",b:"(4.11), up +0.15 from Q4 FY26 and near the Q1 FY26 high (4.31), with gains in almost every area."},
-    {h:"Leadership support (4.4) and colleague support (4.3) remain the strongest drivers",b:"though colleague support dipped −0.4 vs Q4 — worth watching."},
-    {h:"Professional growth (3.6) is consistently the weakest area",b:"across all quarters despite a modest rebound — the clearest priority for action."},
-    {h:"Collaboration & silos is the dominant qualitative theme",b:"cross-team engagement and knowledge-sharing across locations would address it directly."},
+    {h:"Engagement rose to 4.22 in Q3 FY27",b:"up +0.11 from Q2 FY27 — the second-highest score after the Q1 FY26 high (4.31)."},
+    {h:"Five areas now score 4.4",b:"leadership, colleague support, work environment, recognition and feedback comfort; colleague support recovered after its Q2 dip."},
+    {h:"Professional growth (3.7) is still the weakest area",b:"up slightly, but the lowest score in every survey period — the clearest priority for action."},
+    {h:"Communication (3.9) was the only area to fall",b:"comments ask for better communication across the unit, more visibility of P&C work, and more voices at Global P&C meetings."},
   ]
 };
 function scoreC(v){
@@ -631,15 +633,15 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
         <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".14em",color:"rgba(255,255,255,.4)",marginBottom:12}}>People & Culture · Quarterly Engagement Survey</div>
         <div style={{display:"flex",alignItems:"flex-end",gap:28,flexWrap:"wrap",marginBottom:18}}>
           <div>
-            <div style={{fontSize:52,fontWeight:800,lineHeight:1,color:"#fff",fontVariantNumeric:"tabular-nums",letterSpacing:"-.01em"}}>{SURVEY_DATA.overall[3].toFixed(2)}</div>
-            <div style={{fontSize:11.5,color:"rgba(255,255,255,.45)",marginTop:5,letterSpacing:".01em"}}>Overall score &nbsp;·&nbsp; Q2 FY27 &nbsp;·&nbsp; Scale 1–5</div>
+            <div style={{fontSize:52,fontWeight:800,lineHeight:1,color:"#fff",fontVariantNumeric:"tabular-nums",letterSpacing:"-.01em"}}>{SURVEY_DATA.overall[SURVEY_DATA.overall.length-1].toFixed(2)}</div>
+            <div style={{fontSize:11.5,color:"rgba(255,255,255,.45)",marginTop:5,letterSpacing:".01em"}}>Overall score &nbsp;·&nbsp; Q3 FY27 &nbsp;·&nbsp; Scale 1–5</div>
           </div>
           <div style={{paddingBottom:4}}>
             <div style={{display:"inline-flex",alignItems:"center",gap:7,padding:"7px 14px",borderRadius:24,background:"rgba(0,168,138,.16)",border:"1px solid rgba(0,168,138,.28)"}}>
               <svg width="11" height="11" viewBox="0 0 12 12"><polyline points="2,9 6,3 10,9" fill="none" stroke="#00A88A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              <span style={{fontSize:13,fontWeight:700,color:"#00A88A",fontVariantNumeric:"tabular-nums"}}>+0.15 vs Q4 FY26</span>
+              <span style={{fontSize:13,fontWeight:700,color:"#00A88A",fontVariantNumeric:"tabular-nums"}}>+0.11 vs Q2 FY27</span>
             </div>
-            <div style={{fontSize:11,color:"rgba(255,255,255,.34)",marginTop:6,paddingLeft:2}}>13 team members responded</div>
+            <div style={{fontSize:11,color:"rgba(255,255,255,.34)",marginTop:6,paddingLeft:2}}>11 of 15 team members responded</div>
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
@@ -660,11 +662,11 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
       {/* ── KPI strip ── */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10}}>
         {[
-          {n:"4.4",l:"Leadership",note:"Highest this quarter",ac:B.success},
-          {n:"4.3",l:"Colleague support",note:"Strong · watch trend",ac:"#3D7A15"},
-          {n:"4.2",l:"Recognition",note:"Up +0.3 vs Q4",ac:B.charcoal},
-          {n:"4.2",l:"Feedback comfort",note:"Up +0.4 vs Q4",ac:B.charcoal},
-          {n:"3.6",l:"Prof. growth",note:"Lowest · priority",ac:B.danger},
+          {n:"4.4",l:"Work environment",note:"Up +0.3 vs Q2",ac:B.success},
+          {n:"4.4",l:"Leadership",note:"Steady · joint highest",ac:B.success},
+          {n:"4.4",l:"Colleague support",note:"Up +0.1 · recovered",ac:"#3D7A15"},
+          {n:"3.9",l:"Communication",note:"Only drop · −0.1 vs Q2",ac:B.charcoal},
+          {n:"3.7",l:"Prof. growth",note:"Lowest · priority",ac:B.danger},
         ].map((k,i)=>(
           <div key={i} style={{background:B.white,borderRadius:12,padding:"14px 16px",border:`1px solid ${B.g2}`,borderTop:`3px solid ${k.ac}`}}>
             <div style={{fontSize:28,fontWeight:800,color:k.ac,fontVariantNumeric:"tabular-nums",lineHeight:1,marginBottom:4}}>{k.n}</div>
@@ -692,7 +694,7 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
                     </th>
                   );
                 })}
-                <th style={{padding:"9px 14px",textAlign:"center",fontSize:10.5,fontWeight:700,color:B.g3,borderBottom:`1px solid ${B.g2}`,width:62}}>Δ vs Q4</th>
+                <th style={{padding:"9px 14px",textAlign:"center",fontSize:10.5,fontWeight:700,color:B.g3,borderBottom:`1px solid ${B.g2}`,width:62}}>Δ vs Q2</th>
               </tr>
             </thead>
             <tbody>
@@ -724,7 +726,7 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
                     </td>
                   );
                 })}
-                <td style={{padding:"10px 14px",textAlign:"center",fontSize:12,fontWeight:700,color:B.success}}>▲ +0.16</td>
+                <td style={{padding:"10px 14px",textAlign:"center",fontSize:12,fontWeight:700,color:B.success}}>▲ +0.11</td>
               </tr>
             </tbody>
           </table>
@@ -754,10 +756,10 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
           </svg>
         </div>
         <div style={{background:B.white,borderRadius:14,border:`1px solid ${B.g2}`,padding:"16px 18px 10px"}}>
-          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".1em",color:B.g3,marginBottom:10}}>Q2 FY27 — scores by question</div>
+          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".1em",color:B.g3,marginBottom:10}}>Q3 FY27 — scores by question</div>
           <svg viewBox={`0 0 ${BW} ${BH}`} width="100%" style={{display:"block"}}>
             {SURVEY_DATA.questions.map((row,i)=>{
-              const v=row.s[3];
+              const v=row.s[row.s.length-1];
               const {bg,c}=scoreC(v);
               const y=BPT+i*rowH;
               const bW=(v/5)*bgW;
@@ -779,7 +781,7 @@ function SurveyView({appData,setAppData,userName,isAdmin}){
       {/* ── Comment themes ── */}
       <div style={{background:B.white,borderRadius:14,border:`1px solid ${B.g2}`,overflow:"hidden"}}>
         <div style={{padding:"14px 20px 10px",borderBottom:`1px solid ${B.g2}`}}>
-          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".1em",color:B.g3}}>Comment themes · Q2 FY27</div>
+          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".1em",color:B.g3}}>Comment themes · Q3 FY27</div>
         </div>
         {SURVEY_DATA.themes.map((t,i)=>(
           <div key={i} style={{display:"flex",gap:16,padding:"13px 20px",borderBottom:i<SURVEY_DATA.themes.length-1?`1px solid ${B.g2}`:"none",alignItems:"flex-start"}}>
